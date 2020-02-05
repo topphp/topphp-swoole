@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace topphp\swoole;
 
-class SkeletonClass
+use think\facade\App;
+
+class SwooleApp extends App
 {
     /**
      * Create a new Skeleton Instance

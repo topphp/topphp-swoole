@@ -9,13 +9,15 @@ declare(strict_types=1);
 
 namespace topphp\swoole\command;
 
-use Swoole\Http\Server as HttpServer;
+use Swoole\Http\Request;
+use Swoole\Http\Response;
 use Swoole\Server;
-use Swoole\WebSocket\Server as WebsocketServer;
+use think\App;
 use think\console\Command;
 use think\console\Input;
 use think\console\Output;
-use think\swoole\PidManager;
+use Swoole\Http\Server as HttpServer;
+use Swoole\WebSocket\Server as WebsocketServer;
 
 class SwooleServer extends Command
 {
@@ -52,45 +54,103 @@ class SwooleServer extends Command
 
     public function handle()
     {
-        $http = new \Swoole\Http\Server("127.0.0.1", 9501);
+        $this->getServer()->on("request", function (Request $req, Response $res) {
+            $request = $this->prepareRequest($req);
 
-        $http->on("start", function ($server) {
-            echo "Swoole http server is started at http://127.0.0.1:9501\n";
+            $response = $this->app->http->run($request);
+            $this->sendResponse($res, $response);
         });
 
-        $http->on("request", function ($request, $response) {
-            $response->header("Content-Type", "text/plain");
-            $response->end("Hello World\n");
+        $this->getServer()->on('task', function ($server, $task_id, $reactor_id, $data) {
+            echo "New AsyncTask[id=$task_id]\n";
+            $server->finish("$data -> OK");
         });
-
-        $http->start();
+        $this->getServer()->start();
         $this->output->writeln("swoole server is start");
     }
 
-    protected function setSwooleServerListeners()
-    {
-        foreach ($this->events as $event) {
-            $listener = Str::camel("on_$event");
-            $callback = method_exists($this, $listener) ? [$this, $listener] : function () use ($event) {
-                $this->triggerEvent($event, func_get_args());
-            };
+//    protected function setSwooleServerListeners()
+//    {
+//        foreach ($this->events as $event) {
+//            $listener = Str::camel("on_$event");
+//            $callback = method_exists($this, $listener) ? [$this, $listener] : function () use ($event) {
+//                $this->triggerEvent($event, func_get_args());
+//            };
+//
+//            $this->getServer()->on($event, $callback);
+//        }
+//    }
 
-            $this->getServer()->on($event, $callback);
-        }
-    }
-
-    private function createSwooleServer()
+    protected function createSwooleServer()
     {
-        $config     = $this->app->config;
-        $host       = $config->get('topphpServer.server.host');
-        $port       = $config->get('topphpServer.server.port');
-        $socketType = $config->get('topphpServer.server.socket_type', SWOOLE_SOCK_TCP);
-        $mode       = $config->get('topphpServer.server.mode', SWOOLE_PROCESS);
+        $isWebsocket = $this->app->config->get('swoole.websocket.enable', false);
+
+        $serverClass = $isWebsocket ? WebsocketServer::class : HttpServer::class;
+        $config      = $this->app->config;
+        $host        = $config->get('topphpServer.server.host');
+        $port        = $config->get('topphpServer.server.port');
+        $socketType  = $config->get('topphpServer.server.socket_type', SWOOLE_SOCK_TCP);
+        $mode        = $config->get('topphpServer.server.mode', SWOOLE_PROCESS);
 
         /** @var \Swoole\Server $server */
-        $server  = new $serverClass($host, $port, $mode, $socketType);
+        $server = new $serverClass($host, $port, $mode, $socketType);
+
         $options = $config->get('topphpServer.server.options');
+
         $server->set($options);
         return $server;
+    }
+
+    /**
+     * @return Server
+     */
+    public function getServer()
+    {
+        return $this->app->make(Server::class);
+    }
+
+    protected function prepareRequest(Request $req)
+    {
+        $header = $req->header ?: [];
+        $server = $req->server ?: [];
+
+        foreach ($header as $key => $value) {
+            $server["http_" . str_replace('-', '_', $key)] = $value;
+        }
+
+        // 重新实例化请求对象 处理swoole请求数据
+        /** @var \think\Request $request */
+        $request = $this->app->make('request', [], true);
+
+        return $request->withHeader($header)
+            ->withServer($server)
+            ->withGet($req->get ?: [])
+            ->withPost($req->post ?: [])
+            ->withCookie($req->cookie ?: [])
+            ->withFiles($req->files ?: [])
+            ->withInput($req->rawContent())
+            ->setBaseUrl($req->server['request_uri'])
+            ->setUrl($req->server['request_uri'] . (!empty($req->server['query_string']) ? '?' . $req->server['query_string'] : ''))
+            ->setPathinfo(ltrim($req->server['path_info'], '/'));
+    }
+
+    protected function sendResponse(Response $res, \think\Response $response)
+    {
+        $content = $response->getContent();
+        $this->sendByChunk($res, $content);
+    }
+
+    protected function sendByChunk(Response $res, $content)
+    {
+        $chunkSize = 8192;
+        if (strlen($content) <= $chunkSize) {
+            $res->end($content);
+            return;
+        }
+
+        foreach (str_split($content, $chunkSize) as $chunk) {
+            $res->write($chunk);
+        }
+        $res->end();
     }
 }

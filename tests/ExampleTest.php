@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace topphp\Test;
 
 use PHPUnit\Framework\TestCase;
+use topphp\swoole\SwooleApp;
 
 class ExampleTest extends TestCase
 {
@@ -13,6 +14,8 @@ class ExampleTest extends TestCase
      */
     public function testTrueIsTrue()
     {
+        $s = new SwooleApp();
+        var_dump($s->echoPhrase("hello"));
         $this->assertTrue(true);
     }
 }
