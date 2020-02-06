@@ -18,6 +18,7 @@ use Swoole\Http\Response as SwooleHttpResponse;
 use Swoole\Http\Server as SwooleHttpServer;
 use Swoole\Server as SwooleServer;
 use topphp\swoole\contract\SwooleHttpServerInterface;
+use topphp\swoole\SwooleEvent;
 
 class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
 {
@@ -26,6 +27,9 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
      * @var App
      */
     private $app;
+    public $events = [
+        SwooleEvent::ON_REQUEST
+    ];
 
     public function onStart(SwooleHttpServer $server): void
     {

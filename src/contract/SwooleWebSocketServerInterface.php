@@ -10,12 +10,15 @@ declare(strict_types=1);
 namespace topphp\swoole\contract;
 
 use Swoole\Http\Request as SwooleHttpRequest;
+use Swoole\Http\Response as SwooleHttpResponse;
 use Swoole\WebSocket\Frame as SwooleFrame;
 use Swoole\WebSocket\Server as SwooleWebSocketServer;
 
 interface SwooleWebSocketServerInterface
 {
     public function onOpen(SwooleWebSocketServer $server, SwooleHttpRequest $request): void;
+
+    public function onHandShake(SwooleHttpRequest $request, SwooleHttpResponse $response): void;
 
     public function onMessage(SwooleWebSocketServer $server, SwooleFrame $frame): void;
 

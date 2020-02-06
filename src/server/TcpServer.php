@@ -11,9 +11,15 @@ namespace topphp\swoole\server;
 
 use Swoole\Server as SwooleServer;
 use topphp\swoole\contract\SwooleServerInterface;
+use topphp\swoole\SwooleEvent;
 
 class TcpServer extends SwooleServer implements SwooleServerInterface
 {
+    public $events = [
+        SwooleEvent::ON_RECEIVE,
+        SwooleEvent::ON_CLOSE
+    ];
+
     public function onConnect(SwooleServer $server, int $fd): void
     {
         // TODO: Implement onConnect() method.

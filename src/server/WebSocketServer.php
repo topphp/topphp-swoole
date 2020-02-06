@@ -10,13 +10,27 @@ declare(strict_types=1);
 namespace topphp\swoole\server;
 
 use Swoole\Http\Request as SwooleHttpRequest;
+use Swoole\Http\Response as SwooleHttpResponse;
 use Swoole\WebSocket\Frame as SwooleFrame;
 use Swoole\WebSocket\Server as SwooleWebSocketServer;
 use topphp\swoole\contract\SwooleWebSocketServerInterface;
+use topphp\swoole\SwooleEvent;
 
 class WebSocketServer extends SwooleWebSocketServer implements SwooleWebSocketServerInterface
 {
+    public $events = [
+        SwooleEvent::ON_OPEN,
+        SwooleEvent::ON_MESSAGE,
+        SwooleEvent::ON_HAND_SHAKE,
+        SwooleEvent::ON_CLOSE
+    ];
+
     public function onOpen(SwooleWebSocketServer $server, SwooleHttpRequest $request): void
+    {
+        // TODO: Implement onOpen() method.
+    }
+
+    public function onHandShake(SwooleHttpRequest $request, SwooleHttpResponse $response): void
     {
         // TODO: Implement onOpen() method.
     }
@@ -25,6 +39,7 @@ class WebSocketServer extends SwooleWebSocketServer implements SwooleWebSocketSe
     {
         // TODO: Implement onMessage() method.
     }
+
 
     public function onClose(SwooleWebSocketServer $server, int $fd): void
     {

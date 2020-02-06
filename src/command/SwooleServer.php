@@ -14,16 +14,34 @@ use Swoole\Server;
 use think\console\Command;
 use think\console\Input;
 use think\console\Output;
+use topphp\swoole\server\HttpServer;
+use topphp\swoole\server\TcpServer;
+use topphp\swoole\server\WebSocketServer;
 use topphp\swoole\ServerConfig;
 use topphp\swoole\SwooleApp;
+use topphp\swoole\SwooleEvent;
 
 class SwooleServer extends Command
 {
-    /** @var ServerConfig $config */
+    /** @var ServerConfig[] $config */
     private $config;
 
     protected function initialize(Input $input, Output $output)
     {
+//        $server  = new WebSocketServer('127.0.0.1', 9501);
+//        $server2 = new HttpServer('127.0.0.1', 9502);
+//        $server->addlistener('127.0.0.1', 9502, SWOOLE_SOCK_TCP);
+//        $server->on(SwooleEvent::ON_MESSAGE, function (Server $server, $fd, $reactor_id, $data) {
+//            echo $data . PHP_EOL;
+//            $server->send($fd, "Swoole: {$data}");
+//        });
+//        $server->on(SwooleEvent::ON_REQUEST, function (Server $server, $fd, $reactor_id, $data) {
+//            echo $data . PHP_EOL;
+//            $server->send($fd, "Swoole: {$data}");
+//        });
+//        $server->set(['open_http_protocol' => true]);
+//        $server->start();
+
         $this->app->bind(SwooleApp::class, $this->initSwooleServer());
         $this->setSwooleServerListeners();
     }
@@ -35,57 +53,121 @@ class SwooleServer extends Command
 
     public function handle()
     {
-        $this->getServer('top-server2')->on('receive', function (Server $server, $fd, $reactor_id, $data) {
-            echo $data . PHP_EOL;
-            $server->send($fd, "Swoole: {$data}");
-        });
-        $this->getServer('top-server2')->on('task', function (SwooleServer $server, $taskId, $fromId, $data) {
-        });
-
-//        $this->getServer()->on('close', function (Server $server, $fd) {
-//            echo "connection close: {$fd}\n";
-//        });
-
         Runtime::enableCoroutine(true, defined('SWOOLE_HOOK_FLAGS') ? SWOOLE_HOOK_FLAGS : SWOOLE_HOOK_ALL);
-
-        $this->getServer('top-server2')->start();
         $this->output->writeln("swoole server is start");
     }
 
     private function initSwooleServer()
     {
-        $servers = $this->app->config->get('topphpServer.servers');
-        $mode    = $this->app->config->get('topphpServer.mode', SWOOLE_PROCESS);
-        $options = $this->app->config->get('topphpServer.options');
+        $servers     = $this->app->config->get('topphpServer.servers');
+        $ServerArray = array_column($servers, 'type');
+        $servers     = $this->sortServers($servers);
+        $mode        = $this->app->config->get('topphpServer.mode', SWOOLE_PROCESS);
+        $options     = $this->app->config->get('topphpServer.options');
         foreach ($servers as $server) {
-            /** @var ServerConfig $cfg */
-            $cfg         = $this->app->make(ServerConfig::class, [$server], true);
-            $serverClass = $cfg->getType();
-
-            /** @var Server $server */
-            $server = $this->app->make((string)$serverClass, [
-                $cfg->getHost(),
-                $cfg->getPort(),
-                $mode,
-                $cfg->getSockType()
-            ], true);
-            if (!empty($cfg->getOptions())) {
-                // 如果配置文件中 某个服务内部options配置不为空,与外层options合并
-                $option = array_merge($cfg->getOptions(), $options);
-                $server->set($option);
-            } else {
-                // 否则直接使用外层options配置
-                $server->set($options);
-            }
-            $this->app->bind($cfg->getName(), $server);
-            $this->config[$cfg->getName()] = $cfg;
+            $serverClass = $server->getType();
+            $serverTmp   = null;
+//            switch ($serverClass) {
+//                case TcpServer::class:
+//                    /** @var Server $serverTmp */
+//                    $serverTmp = $this->app->make((string)$serverClass, [
+//                        $server->getHost(),
+//                        $server->getPort(),
+//                        $mode,
+//                        $server->getSockType()
+//                    ], true);
+//                    break;
+//                case HttpServer::class:
+//                    if (!in_array(TcpServer::class, $ServerArray) && !in_array(WebSocketServer::class, $ServerArray)) {
+//                        /** @var Server $serverTmp */
+//                        $serverTmp = $this->app->make((string)$serverClass, [
+//                            $server->getHost(),
+//                            $server->getPort(),
+//                            $mode,
+//                            $server->getSockType()
+//                        ], true);
+//                    } else {
+//                        var_dump($serverClass);
+//                        $slaveServer = $serverTmp->addlistener($server->getHost(), $server->getPort(),
+//                            $server->getSockType());
+//                    }
+//                    var_dump($serverTmp);
+//                    break;
+//                case WebSocketServer::class:
+//                    var_dump($serverTmp);
+//                    if (!in_array(TcpServer::class, $ServerArray)) {
+//                        /** @var HttpServer $serverTmp */
+//                        $serverTmp = $this->app->make((string)$serverClass, [
+//                            $server->getHost(),
+//                            $server->getPort(),
+//                            $mode,
+//                            $server->getSockType()
+//                        ], true);
+//                    } else {
+//                        $slaveServer = $serverTmp->addlistener($server->getHost(), $server->getPort(),
+//                            $server->getSockType());
+//                    }
+//                    break;
+//                default:
+//                    break;
+//            }
+//            if (!empty($server->getOptions())) {
+//                // 如果配置文件中 某个服务内部options配置不为空,与外层options合并
+//                $option = array_merge($server->getOptions(), $options);
+//                $serverTmp->set($option);
+//            } else {
+//                // 否则直接使用外层options配置
+//                $serverTmp->set($options);
+//            }
+//            $this->app->bind($server->getName(), $serverTmp);
+            $this->config[$server->getName()] = $server;
         }
     }
 
+    /**
+     * 给服务排序,让tcp服务排第一个
+     * @param ServerConfig[] $servers
+     * @return ServerConfig[]
+     * @author sleep
+     */
+    private function sortServers($servers)
+    {
+        $sortServer = [];
+        foreach ($servers as $key => $server) {
+            /** @var ServerConfig[] $cfg */
+            $cfg[$key] = $this->app->make(ServerConfig::class, [$server], true);
+            switch ($cfg[$key]->getType()) {
+                case TcpServer::class:
+                    array_unshift($sortServer, $cfg[$key]);
+                    break;
+                case HttpServer::class:
+                case WebSocketServer::class:
+                    array_push($sortServer, $cfg[$key]);
+                    break;
+                default:
+                    array_push($sortServer, $cfg[$key]);
+                    break;
+            }
+        }
+        return $sortServer;
+    }
+
+    /**
+     * 遍历服务和事件获取监听
+     * @author sleep
+     */
     private function setSwooleServerListeners()
     {
-        //todo 遍历服务和事件获取监听
-        var_dump($this->config);
+        //遍历服务和事件获取监听
+        foreach ($this->config as $config) {
+            $serverClass = $config->getType();
+            $ref         = new \ReflectionClass($serverClass);
+            dump($ref->getProperty('events'));
+            $event    = '';
+            $callback = '';
+
+//            $this->getServer()->on($event, $callback);
+        }
 //        foreach ($this->events as $event) {
 //            $listener = Str::camel("on_$event");
 //            $callback = method_exists($this, $listener) ? [$this, $listener] : function () use ($event) {
@@ -106,4 +188,5 @@ class SwooleServer extends Command
         $server = $this->app->get($name);
         return $server;
     }
+
 }
