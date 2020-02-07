@@ -9,7 +9,10 @@ declare(strict_types=1);
 
 namespace topphp\swoole\server;
 
+use Throwable;
+use think\Cookie;
 use think\facade\App;
+use think\exception\Handle;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
 use Swoole\Http\Request as SwooleHttpRequest;
@@ -21,6 +24,72 @@ use topphp\swoole\SwooleEvent;
 
 class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
 {
+    public static $statusTexts = [
+        100 => 'Continue',
+        101 => 'Switching Protocols',
+        102 => 'Processing',            // RFC2518
+        103 => 'Early Hints',
+        200 => 'OK',
+        201 => 'Created',
+        202 => 'Accepted',
+        203 => 'Non-Authoritative Information',
+        204 => 'No Content',
+        205 => 'Reset Content',
+        206 => 'Partial Content',
+        207 => 'Multi-Status',          // RFC4918
+        208 => 'Already Reported',      // RFC5842
+        226 => 'IM Used',               // RFC3229
+        300 => 'Multiple Choices',
+        301 => 'Moved Permanently',
+        302 => 'Found',
+        303 => 'See Other',
+        304 => 'Not Modified',
+        305 => 'Use Proxy',
+        307 => 'Temporary Redirect',
+        308 => 'Permanent Redirect',    // RFC7238
+        400 => 'Bad Request',
+        401 => 'Unauthorized',
+        402 => 'Payment Required',
+        403 => 'Forbidden',
+        404 => 'Not Found',
+        405 => 'Method Not Allowed',
+        406 => 'Not Acceptable',
+        407 => 'Proxy Authentication Required',
+        408 => 'Request Timeout',
+        409 => 'Conflict',
+        410 => 'Gone',
+        411 => 'Length Required',
+        412 => 'Precondition Failed',
+        413 => 'Payload Too Large',
+        414 => 'URI Too Long',
+        415 => 'Unsupported Media Type',
+        416 => 'Range Not Satisfiable',
+        417 => 'Expectation Failed',
+        418 => 'I\'m a teapot',                                               // RFC2324
+        421 => 'Misdirected Request',                                         // RFC7540
+        422 => 'Unprocessable Entity',                                        // RFC4918
+        423 => 'Locked',                                                      // RFC4918
+        424 => 'Failed Dependency',                                           // RFC4918
+        425 => 'Too Early',                                                   // RFC-ietf-httpbis-replay-04
+        426 => 'Upgrade Required',                                            // RFC2817
+        428 => 'Precondition Required',                                       // RFC6585
+        429 => 'Too Many Requests',                                           // RFC6585
+        431 => 'Request Header Fields Too Large',                             // RFC6585
+        449 => 'Retry With',
+        451 => 'Unavailable For Legal Reasons',                               // RFC7725
+        500 => 'Internal Server Error',
+        501 => 'Not Implemented',
+        502 => 'Bad Gateway',
+        503 => 'Service Unavailable',
+        504 => 'Gateway Timeout',
+        505 => 'HTTP Version Not Supported',
+        506 => 'Variant Also Negotiates',                                     // RFC2295
+        507 => 'Insufficient Storage',                                        // RFC4918
+        508 => 'Loop Detected',                                               // RFC5842
+        510 => 'Not Extended',                                                // RFC2774
+        511 => 'Network Authentication Required',                             // RFC6585
+    ];
+
     public static function getEvents(): array
     {
         return [
@@ -37,9 +106,14 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
 
     public static function onRequest(SwooleHttpRequest $req, SwooleHttpResponse $res): void
     {
-        $request  = self::prepareRequest($req);
-        $response = App::getInstance()->http->run($request);
-        self::sendResponse($res, $response);
+        $app     = App::getInstance();
+        $request = self::prepareRequest($req);
+        try {
+            $response = $app->http->run($request);
+        } catch (Throwable $e) {
+            $response = $app->make(Handle::class)->render($request, $e);
+        }
+        self::sendResponse($res, $response, $app->cookie);
     }
 
     public static function onTask(SwooleServer $server, $taskId, $fromId, $data): void
@@ -77,11 +151,34 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
      * 生成返回数据对象
      * @param SwooleHttpResponse $res
      * @param \think\Response $response
+     * @param Cookie $cookie
      * @author sleep
      */
-    private static function sendResponse(Response $res, \think\Response $response)
+    private static function sendResponse(Response $res, \think\Response $response, Cookie $cookie)
     {
-        $res->setHeader('Content-Type', $response->getHeader('Content-Type'));
+        // 设置header
+        foreach ($response->getHeader() as $key => $val) {
+            $res->setHeader($key, $val);
+        }
+        //设置状态码
+        $code = $response->getCode();
+        if (!isset(self::$statusTexts[$code])) {
+            self::$statusTexts[$code] = 'unknown status';
+        }
+        $res->setStatusCode($code, self::$statusTexts[$code]);
+
+        foreach ($cookie->getCookie() as $name => $val) {
+            [$value, $expire, $option] = $val;
+            $res->setCookie(
+                $name,
+                $value,
+                $expire,
+                $option['path'],
+                $option['domain'],
+                $option['secure'] ? true : false,
+                $option['httponly'] ? true : false
+            );
+        }
         $content = $response->getContent();
         self::sendByChunk($res, $content);
     }

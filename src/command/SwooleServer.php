@@ -39,7 +39,6 @@ class SwooleServer extends Command
 
     private function initSwooleServer()
     {
-//        Runtime::enableCoroutine(true, defined('SWOOLE_HOOK_FLAGS') ? SWOOLE_HOOK_FLAGS : SWOOLE_HOOK_ALL);
         $servers = $this->app->config->get('topphpServer.servers');
         $servers = $this->sortServers($servers);
         $mode    = $this->app->config->get('topphpServer.mode', SWOOLE_PROCESS);
@@ -98,6 +97,7 @@ class SwooleServer extends Command
 
     private function startServer()
     {
+        Runtime::enableCoroutine(true, defined('SWOOLE_HOOK_FLAGS') ? SWOOLE_HOOK_FLAGS : SWOOLE_HOOK_ALL);
         $this->server->start();
     }
 
