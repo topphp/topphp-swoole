@@ -15,28 +15,32 @@ use topphp\swoole\SwooleEvent;
 
 class TcpServer extends SwooleServer implements SwooleServerInterface
 {
-    public $events = [
-        SwooleEvent::ON_RECEIVE,
-        SwooleEvent::ON_CLOSE
-    ];
 
-    public function onConnect(SwooleServer $server, int $fd): void
+    public static function onConnect(SwooleServer $server, int $fd): void
     {
         // TODO: Implement onConnect() method.
     }
 
-    public function onReceive(SwooleServer $server, int $fd, int $reactorId, string $data): void
+    public static function onReceive(SwooleServer $server, int $fd, int $reactorId, string $data): void
     {
         // TODO: Implement onReceive() method.
     }
 
-    public function onTask(SwooleServer $server, $taskId, $fromId, $data): void
+    public static function onTask(SwooleServer $server, $taskId, $fromId, $data): void
     {
         // TODO: Implement onTask() method.
     }
 
-    public function onClose(SwooleServer $server, int $fd, int $reactorId): void
+    public static function onClose(SwooleServer $server, int $fd, int $reactorId): void
     {
         // TODO: Implement onClose() method.
+    }
+
+    public static function getEvents(): array
+    {
+        return [
+            SwooleEvent::ON_RECEIVE,
+            SwooleEvent::ON_TASK
+        ];
     }
 }

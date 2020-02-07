@@ -9,8 +9,7 @@ declare(strict_types=1);
 
 namespace topphp\swoole\server;
 
-use think\App;
-use think\annotation\Inject;
+use think\facade\App;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
 use Swoole\Http\Request as SwooleHttpRequest;
@@ -22,34 +21,34 @@ use topphp\swoole\SwooleEvent;
 
 class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
 {
-    /**
-     * @Inject()
-     * @var App
-     */
-    private $app;
-    public $events = [
-        SwooleEvent::ON_REQUEST
-    ];
-
-    public function onStart(SwooleHttpServer $server): void
+    public static function getEvents(): array
     {
-        // TODO: Implement onStart() method.
+        return [
+            SwooleEvent::ON_START,
+            SwooleEvent::ON_REQUEST,
+            SwooleEvent::ON_TASK
+        ];
     }
 
-    public function onRequest(SwooleHttpRequest $req, SwooleHttpResponse $res): void
+    public static function onStart(SwooleHttpServer $server): void
     {
-        $request  = $this->prepareRequest($req);
-        $response = $this->app->http->run($request);
-        $this->sendResponse($res, $response);
+        echo "http server is started: {$server->host}:{$server->port}\n";
     }
 
-    public function onTask(SwooleServer $server, $taskId, $fromId, $data): void
+    public static function onRequest(SwooleHttpRequest $req, SwooleHttpResponse $res): void
+    {
+        $request  = self::prepareRequest($req);
+        $response = App::getInstance()->http->run($request);
+        self::sendResponse($res, $response);
+    }
+
+    public static function onTask(SwooleServer $server, $taskId, $fromId, $data): void
     {
         echo "New AsyncTask[id=$taskId]\n";
         $server->finish("$data -> OK");
     }
 
-    private function prepareRequest(Request $req)
+    private static function prepareRequest(Request $req)
     {
         $header = $req->header ?: [];
         $server = $req->server ?: [];
@@ -59,7 +58,7 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
         }
         // 重新实例化请求对象 处理swoole请求数据
         /** @var \think\Request $request */
-        $request = $this->app->make('request', [], false);
+        $request = App::getInstance()->make('request', [], false);
 
         return $request->withHeader($header)
             ->withServer($server)
@@ -80,11 +79,11 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
      * @param \think\Response $response
      * @author sleep
      */
-    private function sendResponse(Response $res, \think\Response $response)
+    private static function sendResponse(Response $res, \think\Response $response)
     {
         $res->setHeader('Content-Type', $response->getHeader('Content-Type'));
         $content = $response->getContent();
-        $this->sendByChunk($res, $content);
+        self::sendByChunk($res, $content);
     }
 
     /**
@@ -93,14 +92,13 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
      * @param $content
      * @author sleep
      */
-    private function sendByChunk(Response $res, $content)
+    private static function sendByChunk(Response $res, $content)
     {
         $chunkSize = 8192;
         if (strlen($content) <= $chunkSize) {
             $res->end($content);
             return;
         }
-
         foreach (str_split($content, $chunkSize) as $chunk) {
             $res->write($chunk);
         }

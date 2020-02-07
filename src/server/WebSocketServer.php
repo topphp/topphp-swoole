@@ -18,31 +18,46 @@ use topphp\swoole\SwooleEvent;
 
 class WebSocketServer extends SwooleWebSocketServer implements SwooleWebSocketServerInterface
 {
-    public $events = [
-        SwooleEvent::ON_OPEN,
-        SwooleEvent::ON_MESSAGE,
-        SwooleEvent::ON_HAND_SHAKE,
-        SwooleEvent::ON_CLOSE
-    ];
+    public static function getEvents(): array
+    {
+        return [
+            SwooleEvent::ON_START,
+            SwooleEvent::ON_OPEN,
+            SwooleEvent::ON_MESSAGE,
+            SwooleEvent::ON_HAND_SHAKE,
+            SwooleEvent::ON_CLOSE,
+            SwooleEvent::ON_TASK
+        ];
+    }
 
-    public function onOpen(SwooleWebSocketServer $server, SwooleHttpRequest $request): void
+    public static function onStart(WebSocketServer $server): void
+    {
+        echo "websocket server is started: {$server->host}:{$server->port}\n";
+    }
+
+    public static function onOpen(SwooleWebSocketServer $server, SwooleHttpRequest $request): void
+    {
+        echo "$request->fd\n";
+    }
+
+    public static function onHandShake(SwooleHttpRequest $request, SwooleHttpResponse $response): void
     {
         // TODO: Implement onOpen() method.
     }
 
-    public function onHandShake(SwooleHttpRequest $request, SwooleHttpResponse $response): void
-    {
-        // TODO: Implement onOpen() method.
-    }
-
-    public function onMessage(SwooleWebSocketServer $server, SwooleFrame $frame): void
+    public static function onMessage(SwooleWebSocketServer $server, SwooleFrame $frame): void
     {
         // TODO: Implement onMessage() method.
     }
 
-
-    public function onClose(SwooleWebSocketServer $server, int $fd): void
+    public static function onClose(SwooleWebSocketServer $server, int $fd): void
     {
         // TODO: Implement onClose() method.
+    }
+
+    public static function onTask(SwooleWebSocketServer $server, $taskId, $fromId, $data): void
+    {
+        echo "New AsyncTask[id=$taskId]\n";
+        $server->finish("$data -> OK");
     }
 }

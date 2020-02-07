@@ -16,11 +16,13 @@ use Swoole\WebSocket\Server as SwooleWebSocketServer;
 
 interface SwooleWebSocketServerInterface
 {
-    public function onOpen(SwooleWebSocketServer $server, SwooleHttpRequest $request): void;
+    public static function getEvents(): array;
 
-    public function onHandShake(SwooleHttpRequest $request, SwooleHttpResponse $response): void;
+    public static function onOpen(SwooleWebSocketServer $server, SwooleHttpRequest $request): void;
 
-    public function onMessage(SwooleWebSocketServer $server, SwooleFrame $frame): void;
+    public static function onHandShake(SwooleHttpRequest $request, SwooleHttpResponse $response): void;
 
-    public function onClose(SwooleWebSocketServer $server, int $fd): void;
+    public static function onMessage(SwooleWebSocketServer $server, SwooleFrame $frame): void;
+
+    public static function onClose(SwooleWebSocketServer $server, int $fd): void;
 }

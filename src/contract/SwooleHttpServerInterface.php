@@ -16,9 +16,11 @@ use Swoole\Server as SwooleServer;
 
 interface SwooleHttpServerInterface
 {
-    public function onStart(SwooleHttpServer $server): void;
+    public static function getEvents(): array;
 
-    public function onRequest(SwooleHttpRequest $request, SwooleHttpResponse $response): void;
+    public static function onStart(SwooleHttpServer $server): void;
 
-    public function onTask(SwooleServer $server, $taskId, $fromId, $data): void;
+    public static function onRequest(SwooleHttpRequest $request, SwooleHttpResponse $response): void;
+
+    public static function onTask(SwooleServer $server, $taskId, $fromId, $data): void;
 }

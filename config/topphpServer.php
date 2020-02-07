@@ -27,17 +27,28 @@ return [
 //            'port'      => 9502,                            // 监听端口
 //            'sock_type' => SWOOLE_SOCK_TCP,
 //            'options'   => [
-//                'open_http_protocol'      => true,
-//                'open_websocket_protocol' => true
+//                'open_http_protocol'      => false,
+//                'open_websocket_protocol' => false
 //            ]
 //        ],
-        [
-            'type'      => WebSocketServer::class,
-            'name'      => 'top-server3',
-            'host'      => env('SWOOLE_HOST', '127.0.0.1'), // 监听地址
-            'port'      => 9503,                            // 监听端口
-            'sock_type' => SWOOLE_SOCK_TCP,
-        ],
+//        [
+//            'type'      => TcpServer::class,
+//            'name'      => 'top-server-tcp',
+//            'host'      => env('SWOOLE_HOST', '127.0.0.1'), // 监听地址
+//            'port'      => 9504,                            // 监听端口
+//            'sock_type' => SWOOLE_SOCK_TCP,
+//            'options'   => [
+//                'open_http_protocol'      => false,
+//                'open_websocket_protocol' => false
+//            ]
+//        ],
+//        [
+//            'type'      => WebSocketServer::class,
+//            'name'      => 'top-server3',
+//            'host'      => env('SWOOLE_HOST', '127.0.0.1'), // 监听地址
+//            'port'      => 9503,                            // 监听端口
+//            'sock_type' => SWOOLE_SOCK_TCP,
+//        ],
     ],
     'options' => [
         'pid_file'              => runtime_path() . 'topphp_swoole.pid',

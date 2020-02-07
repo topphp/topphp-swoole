@@ -13,11 +13,13 @@ use Swoole\Server as SwooleServer;
 
 interface SwooleServerInterface
 {
-    public function onConnect(SwooleServer $server, int $fd): void;
+    public static function getEvents(): array;
 
-    public function onReceive(SwooleServer $server, int $fd, int $reactorId, string $data): void;
+    public static function onConnect(SwooleServer $server, int $fd): void;
 
-    public function onTask(SwooleServer $server, $taskId, $fromId, $data): void;
+    public static function onReceive(SwooleServer $server, int $fd, int $reactorId, string $data): void;
 
-    public function onClose(SwooleServer $server, int $fd, int $reactorId): void;
+    public static function onTask(SwooleServer $server, $taskId, $fromId, $data): void;
+
+    public static function onClose(SwooleServer $server, int $fd, int $reactorId): void;
 }
