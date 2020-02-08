@@ -18,7 +18,6 @@ use Swoole\Http\Response;
 use Swoole\Http\Request as SwooleHttpRequest;
 use Swoole\Http\Response as SwooleHttpResponse;
 use Swoole\Http\Server as SwooleHttpServer;
-use Swoole\Server as SwooleServer;
 use topphp\swoole\contract\SwooleHttpServerInterface;
 use topphp\swoole\SwooleEvent;
 

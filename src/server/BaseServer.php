@@ -9,7 +9,7 @@ declare(strict_types=1);
 
 namespace topphp\swoole\server;
 
-use Swoole\Http\Server as SwooleServer;
+use Swoole\Server as SwooleServer;
 use topphp\swoole\SwooleEvent;
 
 class BaseServer
