@@ -93,15 +93,8 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
     public static function getEvents(): array
     {
         return [
-            SwooleEvent::ON_START,
             SwooleEvent::ON_REQUEST,
-            SwooleEvent::ON_TASK
         ];
-    }
-
-    public static function onStart(SwooleHttpServer $server): void
-    {
-        echo "http server is started: {$server->host}:{$server->port}\n";
     }
 
     public static function onRequest(SwooleHttpRequest $req, SwooleHttpResponse $res): void
@@ -114,12 +107,6 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
             $response = $app->make(Handle::class)->render($request, $e);
         }
         self::sendResponse($res, $response, $app->cookie);
-    }
-
-    public static function onTask(SwooleServer $server, $taskId, $fromId, $data): void
-    {
-        echo "New AsyncTask[id=$taskId]\n";
-        $server->finish("$data -> OK");
     }
 
     private static function prepareRequest(Request $req)

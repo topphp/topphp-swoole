@@ -24,5 +24,4 @@ interface SwooleWebSocketServerInterface
 
     public static function onMessage(SwooleWebSocketServer $server, SwooleFrame $frame): void;
 
-    public static function onClose(SwooleWebSocketServer $server, int $fd): void;
 }

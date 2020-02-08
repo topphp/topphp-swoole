@@ -9,10 +9,12 @@ declare(strict_types=1);
 
 namespace topphp\swoole\command;
 
+use Swoole\Coroutine;
 use Swoole\Runtime;
 use Swoole\Server;
 use think\console\Command;
 use think\helper\Str;
+use topphp\swoole\server\BaseServer;
 use topphp\swoole\server\HttpServer;
 use topphp\swoole\server\TcpServer;
 use topphp\swoole\server\WebSocketServer;
@@ -71,11 +73,30 @@ class SwooleServer extends Command
                 // 否则直接使用外层options配置
                 $slaveServer->set($options);
             }
+
             // 添加监听事件
             $this->setSwooleServerListeners($slaveServer, $server->getType());
             $this->app->bind($server->getName(), $slaveServer);
         }
+        // 添加基础监听
+        $this->setDefaultSwooleServerListeners($this->server);
         $this->startServer();
+    }
+
+    /**
+     * @param Server $server
+     * @author sleep
+     */
+    private function setDefaultSwooleServerListeners($server)
+    {
+        $baseEvents = BaseServer::getEvents();
+        foreach ($baseEvents as $baseEvent) {
+            Coroutine::create(function () use ($baseEvent, $server) {
+                $listener = Str::camel("on_$baseEvent");
+                $callback = [BaseServer::class, $listener];
+                $server->on($baseEvent, $callback);
+            });
+        }
     }
 
     /**
@@ -89,9 +110,11 @@ class SwooleServer extends Command
         /**@var HttpServer|WebSocketServer|TcpServer $class */
         $events = $class::getEvents();
         foreach ($events as $event) {
-            $listener = Str::camel("on_$event");
-            $callback = [$class, $listener];
-            $server->on($event, $callback);
+            Coroutine::create(function () use ($class, $server, $event) {
+                $listener = Str::camel("on_$event");
+                $callback = [$class, $listener];
+                $server->on($event, $callback);
+            });
         }
     }
 
