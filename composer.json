@@ -18,13 +18,15 @@
     ],
     "require": {
         "php": "~7.2",
-        "swoole/ide-helper": "^4.4",
+        "ext-json": "*",
+        "datto/json-rpc": "^6.0",
         "topthink/framework": "^6.0.2"
     },
     "require-dev": {
         "symfony/var-dumper": "^5.0",
         "squizlabs/php_codesniffer": "^3.5",
-        "phpunit/phpunit": "7.5.20"
+        "phpunit/phpunit": "^8.5.0",
+        "swoole/ide-helper": "^4.4"
     },
     "autoload": {
         "psr-4": {
@@ -37,7 +39,7 @@
         }
     },
     "scripts": {
-        "test": "phpunit",
+        "test": "./vendor/bin/phpunit -c ./phpunit.xml.dist",
         "check-style": "phpcs src tests",
         "fix-style": "phpcbf src tests",
         "post-root-package-install": []
@@ -55,8 +57,6 @@
             }
         }
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
     "config": {
         "sort-packages": true
     },
