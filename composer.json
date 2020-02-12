@@ -37,7 +37,7 @@
         }
     },
     "scripts": {
-        "test": "phpunit",
+        "test": "./vendor/bin/phpunit -c ./phpunit.xml.dist",
         "check-style": "phpcs src tests",
         "fix-style": "phpcbf src tests",
         "post-root-package-install": []
