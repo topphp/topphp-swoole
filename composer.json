@@ -26,7 +26,7 @@
         "symfony/var-dumper": "^5.0",
         "squizlabs/php_codesniffer": "^3.5",
         "swoole/ide-helper": "^4.4",
-        "phpunit/phpunit": "^8.5.0",
+        "phpunit/phpunit": "^8.5.0"
     },
     "autoload": {
         "psr-4": {
@@ -50,7 +50,7 @@
         },
         "think": {
             "services": [
-                "topphp\\swoole\\services\\Service"
+                "Topphp\\Swoole\\services\\Service"
             ],
             "config": {
                 "topphpServer": "config/topphpServer.php"
