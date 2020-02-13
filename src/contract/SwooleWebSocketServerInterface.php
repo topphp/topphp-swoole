@@ -7,7 +7,7 @@
  */
 declare(strict_types=1);
 
-namespace topphp\swoole\contract;
+namespace Topphp\TopphpSwoole\contract;
 
 use Swoole\Http\Request as SwooleHttpRequest;
 use Swoole\Http\Response as SwooleHttpResponse;
