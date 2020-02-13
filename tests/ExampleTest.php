@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace topphp\Test;
+namespace Topphp\Test;
 
 use Datto\JsonRpc\Server;
 use PHPUnit\Framework\TestCase;
-use topphp\swoole\SwooleApp;
+use Topphp\TopphpSwoole\SwooleApp;
 
 class ExampleTest extends TestCase
 {

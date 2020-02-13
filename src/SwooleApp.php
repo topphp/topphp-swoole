@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace topphp\swoole;
+namespace Topphp\TopphpSwoole;
 
 use think\facade\App;
 use Datto\JsonRpc\Evaluator;

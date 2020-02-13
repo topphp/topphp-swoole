@@ -7,7 +7,7 @@
  */
 declare(strict_types=1);
 
-namespace topphp\swoole\contract;
+namespace Topphp\TopphpSwoole\contract;
 
 use Swoole\Server as SwooleServer;
 

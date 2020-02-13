@@ -7,14 +7,14 @@
  */
 declare(strict_types=1);
 
-namespace topphp\swoole\server;
+namespace Topphp\TopphpSwoole\server;
 
 use Swoole\Http\Request as SwooleHttpRequest;
 use Swoole\Http\Response as SwooleHttpResponse;
 use Swoole\WebSocket\Frame as SwooleFrame;
 use Swoole\WebSocket\Server as SwooleWebSocketServer;
-use topphp\swoole\contract\SwooleWebSocketServerInterface;
-use topphp\swoole\SwooleEvent;
+use Topphp\TopphpSwoole\contract\SwooleWebSocketServerInterface;
+use Topphp\TopphpSwoole\SwooleEvent;
 
 class WebSocketServer extends SwooleWebSocketServer implements SwooleWebSocketServerInterface
 {

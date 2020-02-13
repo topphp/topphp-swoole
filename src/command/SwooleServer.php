@@ -7,19 +7,19 @@
  */
 declare(strict_types=1);
 
-namespace topphp\swoole\command;
+namespace Topphp\TopphpSwoole\command;
 
 use Swoole\Coroutine;
 use Swoole\Runtime;
 use Swoole\Server;
 use think\console\Command;
 use think\helper\Str;
-use topphp\swoole\server\BaseServer;
-use topphp\swoole\server\HttpServer;
-use topphp\swoole\server\TcpServer;
-use topphp\swoole\server\WebSocketServer;
-use topphp\swoole\ServerConfig;
-use topphp\swoole\SwooleApp;
+use Topphp\TopphpSwoole\server\BaseServer;
+use Topphp\TopphpSwoole\server\HttpServer;
+use Topphp\TopphpSwoole\server\TcpServer;
+use Topphp\TopphpSwoole\server\WebSocketServer;
+use Topphp\TopphpSwoole\ServerConfig;
+use Topphp\TopphpSwoole\SwooleApp;
 
 class SwooleServer extends Command
 {
