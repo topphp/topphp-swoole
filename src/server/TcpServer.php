@@ -7,11 +7,11 @@
  */
 declare(strict_types=1);
 
-namespace topphp\swoole\server;
+namespace Topphp\TopphpSwoole\server;
 
 use Swoole\Server as SwooleServer;
-use topphp\swoole\contract\SwooleServerInterface;
-use topphp\swoole\SwooleEvent;
+use Topphp\TopphpSwoole\contract\SwooleServerInterface;
+use Topphp\TopphpSwoole\SwooleEvent;
 
 class TcpServer extends SwooleServer implements SwooleServerInterface
 {
