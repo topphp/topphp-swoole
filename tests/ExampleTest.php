@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace Topphp\Test;
 
+use Datto\JsonRpc\Server;
 use PHPUnit\Framework\TestCase;
 use Topphp\TopphpSwoole\SwooleApp;
 
 class ExampleTest extends TestCase
 {
-    /**
-     * Test that true does in fact equal true
-     */
-    public function testTrueIsTrue()
+    public function testRpcServerReturnData()
     {
-        $s = new SwooleApp();
-        var_dump($s->echoPhrase("hello"));
-        $this->assertTrue(true);
+        $app    = new SwooleApp();
+        $server = new Server($app);
+        $re     = $server->reply('{"jsonrpc":"2.0","method":"echoPhrase1","params":["hello rpc"],"id":1}');
+        var_dump($re);
+        $this->assertNotEmpty($re);
     }
 }
