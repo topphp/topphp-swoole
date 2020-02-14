@@ -50,7 +50,7 @@
         },
         "think": {
             "services": [
-                "Topphp\\Swoole\\services\\Service"
+                "Topphp\\TopphpSwoole\\services\\Service"
             ],
             "config": {
                 "topphpServer": "config/topphpServer.php"

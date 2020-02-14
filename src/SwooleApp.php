@@ -38,7 +38,6 @@ class SwooleApp extends App implements Evaluator
     public function evaluate($method, $arguments)
     {
         $methods = get_class_methods(SwooleApp::class);
-        var_dump($methods);
         if (in_array($method, $methods)) {
             return $this->$method(...$arguments);
         }

@@ -6,9 +6,9 @@
  * Author: sleep <sleep@kaituocn.com>
  */
 
-use topphp\swoole\server\HttpServer;
-use topphp\swoole\server\RpcServer;
-use topphp\swoole\server\WebSocketServer;
+use Topphp\TopphpSwoole\server\RpcServer;
+use Topphp\TopphpSwoole\server\HttpServer;
+use Topphp\TopphpSwoole\server\WebSocketServer;
 
 return [
     'mode'    => SWOOLE_PROCESS,                  // 运行模式 默认为SWOOLE_PROCESS
