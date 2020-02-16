@@ -11,34 +11,33 @@ namespace Topphp\TopphpSwoole\coroutine;
 
 use Swoole\Coroutine\Channel;
 
-class WaitGroup
+class WaitGroup extends \Swoole\Coroutine\WaitGroup
 {
-    private $count = 0;
-    private $chan;
-
-    /**
-     * waitgroup constructor.
-     * @desc 初始化一个channel
-     */
-    public function __construct()
-    {
-        $this->chan = new Channel();
-    }
-
-    public function add(int $count = 1): void
-    {
-        $this->count = $count;
-    }
-
-    public function done(): void
-    {
-        $this->chan->push(true);
-    }
-
-    public function wait(): void
-    {
-        while ($this->count--) {
-            $this->chan->pop();
-        }
-    }
+//    private $count = 0;
+//    private $chan;
+//
+//    /**
+//     * @desc 初始化一个channel
+//     */
+//    public function __construct()
+//    {
+//        $this->chan = new Channel();
+//    }
+//
+//    public function add(int $count = 1): void
+//    {
+//        $this->count = $count;
+//    }
+//
+//    public function done(): void
+//    {
+//        $this->chan->push(true);
+//    }
+//
+//    public function wait(): void
+//    {
+//        while ($this->count--) {
+//            $this->chan->pop();
+//        }
+//    }
 }
