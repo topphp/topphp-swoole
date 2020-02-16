@@ -6,8 +6,8 @@
  * Author: sleep <sleep@kaituocn.com>
  */
 
-use Topphp\TopphpSwoole\server\RpcServer;
 use Topphp\TopphpSwoole\server\HttpServer;
+use Topphp\TopphpSwoole\server\RpcServer;
 use Topphp\TopphpSwoole\server\WebSocketServer;
 
 return [

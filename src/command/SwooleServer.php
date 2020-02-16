@@ -13,7 +13,9 @@ use Swoole\Coroutine;
 use Swoole\Runtime;
 use Swoole\Server;
 use think\console\Command;
+use think\console\input\Argument;
 use think\helper\Str;
+use Topphp\TopphpSwoole\PidManager;
 use Topphp\TopphpSwoole\server\BaseServer;
 use Topphp\TopphpSwoole\server\HttpServer;
 use Topphp\TopphpSwoole\server\TcpServer;
@@ -31,12 +33,26 @@ class SwooleServer extends Command
 
     protected function configure()
     {
-        $this->setName("server")->setDescription("开启swoole服务");
+        $this->setName("server")
+            ->addArgument('action', Argument::OPTIONAL, 'start', 'start')
+            ->setDescription("开启swoole服务");
     }
 
     public function handle()
     {
-        $this->app->bind(SwooleApp::class, $this->initSwooleServer());
+        $action = $this->input->getArgument('action');
+        switch ($action) {
+            case 'start':
+                $this->app->bind(SwooleApp::class, $this->initSwooleServer());
+                break;
+            default:
+                if (in_array($action, [])) {
+                    Coroutine::create(function () use ($action) {
+                        $this->app->invokeMethod([$this, $action], [], true);
+                    });
+                }
+                break;
+        }
     }
 
     private function initSwooleServer()
@@ -65,15 +81,13 @@ class SwooleServer extends Command
                     port [{$server->getHost()}:{$server->getPort()}]");
                 }
             }
-            if (!empty($server->getOptions())) {
-                // 如果配置文件中 某个服务内部options配置不为空,与外层options合并
-                $option = array_replace($server->getOptions(), $options);
-                $slaveServer->set($option);
-            } else {
-                // 否则直接使用外层options配置
-                $slaveServer->set($options);
+            if (count($servers) === 1) {
+                $server->setOptions([
+                    'open_websocket_protocol' => false,
+                ]);
             }
-
+            $option = array_replace($server->getOptions(), $options);
+            $slaveServer->set($option);
             // 添加监听事件
             $this->setSwooleServerListeners($slaveServer, $server->getType());
             $this->app->bind($server->getName(), $slaveServer);
@@ -102,12 +116,11 @@ class SwooleServer extends Command
     /**
      * 遍历服务和事件获取监听
      * @param Server $server
-     * @param string $class
+     * @param Server|HttpServer|WebSocketServer|TcpServer $class
      * @author sleep
      */
     private function setSwooleServerListeners($server, $class)
     {
-        /**@var HttpServer|WebSocketServer|TcpServer $class */
         $events = $class::getEvents();
         foreach ($events as $event) {
             Coroutine::create(function () use ($class, $server, $event) {
