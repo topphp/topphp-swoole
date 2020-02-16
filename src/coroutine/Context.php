@@ -25,23 +25,22 @@ class Context
         return Coroutine::getuid();
     }
 
-    public static function get($key, int $cid = null)
-    {
-        $cid = $cid ?? Coroutine::getuid();
-        if ($cid < 0) {
-            return null;
-        }
-        if (isset(self::$pool[$cid][$key])) {
-            return self::$pool[$cid][$key];
-        }
-        return null;
-    }
-
-    public static function put($key, $item, int $cid = null)
+    public static function get($key, int $cid = null, $default = null)
     {
         $cid = $cid ?? Coroutine::getuid();
         if ($cid > 0) {
-            self::$pool[$cid][$key] = $item;
+            return Coroutine::getContext($cid)[$key] ?? $default;
+        }
+        return self::$pool[$key] ?? $default;
+    }
+
+    public static function set($key, $item, int $cid = null)
+    {
+        $cid = $cid ?? Coroutine::getuid();
+        if ($cid > 0) {
+            Coroutine::getContext($cid)[$key] = $item;
+        } else {
+            self::$pool[$key] = $item;
         }
         return $item;
     }
@@ -50,15 +49,9 @@ class Context
     {
         $cid = $cid ?? Coroutine::getuid();
         if ($cid > 0) {
-            unset(self::$pool[$cid][$key]);
-        }
-    }
-
-    public static function destruct(int $cid = null)
-    {
-        $cid = $cid ?? Coroutine::getuid();
-        if ($cid > 0) {
-            unset(self::$pool[$cid]);
+            unset(Coroutine::getContext($cid)[$key]);
+        } else {
+            unset(self::$pool[$key]);
         }
     }
 }
