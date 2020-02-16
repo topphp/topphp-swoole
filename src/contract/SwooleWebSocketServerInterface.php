@@ -23,5 +23,4 @@ interface SwooleWebSocketServerInterface
     public static function onHandShake(SwooleHttpRequest $request, SwooleHttpResponse $response): void;
 
     public static function onMessage(SwooleWebSocketServer $server, SwooleFrame $frame): void;
-
 }

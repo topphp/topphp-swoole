@@ -7,7 +7,7 @@
  */
 declare(strict_types=1);
 
-namespace topphp\swoole\server\rpc;
+namespace Topphp\TopphpSwoole\server\rpc;
 
 class Packer
 {

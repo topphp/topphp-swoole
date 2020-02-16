@@ -7,10 +7,10 @@
  */
 declare(strict_types=1);
 
-namespace topphp\swoole\server;
+namespace Topphp\TopphpSwoole\server;
 
 use Swoole\Server as SwooleServer;
-use topphp\swoole\contract\SwooleServerInterface;
+use Topphp\TopphpSwoole\contract\SwooleServerInterface;
 
 class RpcServer extends TcpServer implements SwooleServerInterface
 {
