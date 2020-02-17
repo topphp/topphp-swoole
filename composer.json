@@ -31,7 +31,10 @@
     "autoload": {
         "psr-4": {
             "Topphp\\TopphpSwoole\\": "src"
-        }
+        },
+        "files": [
+            "src/helper.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
