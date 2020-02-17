@@ -45,6 +45,15 @@ class Context
         return $item;
     }
 
+    public static function has($key, int $cid = null): bool
+    {
+        $cid = $cid ?? Coroutine::getuid();
+        if ($cid > 0) {
+            return isset(Coroutine::getContext($cid)[$key]);
+        }
+        return isset(self::$pool[$key]);
+    }
+
     public static function delete($key, int $cid = null)
     {
         $cid = $cid ?? Coroutine::getuid();
