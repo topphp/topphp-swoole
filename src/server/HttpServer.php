@@ -118,7 +118,7 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
         }
         // 重新实例化请求对象 处理swoole请求数据
         /** @var \think\Request $request */
-        $request = App::getInstance()->make('request', [], false);
+        $request = App::getInstance()->make('request', null, true);
 
         return $request->withHeader($header)
             ->withServer($server)
