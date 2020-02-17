@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Topphp\TopphpSwoole\coroutine;
 
+use Closure;
 use Swoole\Coroutine;
 
 /**
@@ -62,5 +63,16 @@ class Context
         } else {
             unset(self::$pool[$key]);
         }
+    }
+
+    public static function override($key, Closure $closure, int $cid = null)
+    {
+        $value = null;
+        if (self::has($key, $cid)) {
+            $value = self::get($key, $cid);
+        }
+        $value = $closure($value);
+        self::set($key, $value, $cid);
+        return $value;
     }
 }
