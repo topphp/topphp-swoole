@@ -7,7 +7,7 @@
  */
 declare(strict_types=1);
 
-namespace topphp\swoole\server;
+namespace Topphp\TopphpSwoole\server;
 
 use Throwable;
 use think\Cookie;
@@ -18,8 +18,8 @@ use Swoole\Http\Response;
 use Swoole\Http\Request as SwooleHttpRequest;
 use Swoole\Http\Response as SwooleHttpResponse;
 use Swoole\Http\Server as SwooleHttpServer;
-use topphp\swoole\contract\SwooleHttpServerInterface;
-use topphp\swoole\SwooleEvent;
+use Topphp\TopphpSwoole\contract\SwooleHttpServerInterface;
+use Topphp\TopphpSwoole\SwooleEvent;
 
 class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
 {

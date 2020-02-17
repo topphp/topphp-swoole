@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
-namespace topphp\swoole;
+namespace Topphp\TopphpSwoole;
 
 use think\facade\App;
+use Datto\JsonRpc\Evaluator;
+use Datto\JsonRpc\Exceptions\MethodException;
 
-class SwooleApp extends App
+class SwooleApp extends App implements Evaluator
 {
     /**
      * Create a new Skeleton Instance
@@ -26,5 +28,20 @@ class SwooleApp extends App
     public function echoPhrase(string $phrase): string
     {
         return $phrase;
+    }
+
+    /**
+     * todo rpc-server
+     * @inheritDoc
+     * @throws MethodException
+     */
+    public function evaluate($method, $arguments)
+    {
+        $methods = get_class_methods(SwooleApp::class);
+        var_dump($methods);
+        if (in_array($method, $methods)) {
+            return $this->$method(...$arguments);
+        }
+        throw new MethodException();
     }
 }

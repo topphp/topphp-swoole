@@ -2,7 +2,7 @@
 /**
  * 凯拓软件 [临渊羡鱼不如退而结网,凯拓与你一同成长]
  * Project: topphp-swoole
- * Date: 2020/2/6 19:15
+ * Date: 2020/2/12 23:39
  * Author: sleep <sleep@kaituocn.com>
  */
 declare(strict_types=1);
@@ -11,17 +11,9 @@ namespace Topphp\TopphpSwoole\server;
 
 use Swoole\Server as SwooleServer;
 use Topphp\TopphpSwoole\contract\SwooleServerInterface;
-use Topphp\TopphpSwoole\SwooleEvent;
 
-class TcpServer extends SwooleServer implements SwooleServerInterface
+class RpcServer extends TcpServer implements SwooleServerInterface
 {
-    public static function getEvents(): array
-    {
-        return [
-            SwooleEvent::ON_CONNECT,
-            SwooleEvent::ON_RECEIVE,
-        ];
-    }
 
     public static function onConnect(SwooleServer $server, int $fd): void
     {
@@ -30,6 +22,22 @@ class TcpServer extends SwooleServer implements SwooleServerInterface
 
     public static function onReceive(SwooleServer $server, int $fd, int $reactorId, string $data): void
     {
-        // TODO: Implement onReceive() method.
+        $request  = null;
+        $response = null;
     }
+
+//    private static function buildRequest(int $fd, int $fromId, string $data)
+//    {
+//    }
+//
+//    private static function buildResponse(int $fd, SwooleServer $server, Response $response)
+//    {
+//
+//    }
+
+//    public static function mySend(SwooleServer $server, int $fd, $response): void
+//    {
+//
+//        $server->send($fd, (string)$response->getBody());
+//    }
 }

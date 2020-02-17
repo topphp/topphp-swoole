@@ -7,7 +7,7 @@
  */
 declare(strict_types=1);
 
-namespace topphp\swoole\contract;
+namespace Topphp\TopphpSwoole\contract;
 
 use Swoole\Http\Request as SwooleHttpRequest;
 use Swoole\Http\Response as SwooleHttpResponse;
@@ -23,5 +23,4 @@ interface SwooleWebSocketServerInterface
     public static function onHandShake(SwooleHttpRequest $request, SwooleHttpResponse $response): void;
 
     public static function onMessage(SwooleWebSocketServer $server, SwooleFrame $frame): void;
-
 }

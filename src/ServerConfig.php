@@ -7,10 +7,10 @@
  */
 declare(strict_types=1);
 
-namespace topphp\swoole;
+namespace Topphp\TopphpSwoole;
 
 use Swoole\Server;
-use topphp\swoole\server\HttpServer;
+use Topphp\TopphpSwoole\server\HttpServer;
 
 class ServerConfig
 {

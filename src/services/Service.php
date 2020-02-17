@@ -7,9 +7,9 @@
  */
 declare(strict_types=1);
 
-namespace topphp\swoole\services;
+namespace Topphp\TopphpSwoole\services;
 
-use topphp\swoole\command\SwooleServer;
+use Topphp\TopphpSwoole\command\SwooleServer;
 
 class Service extends \think\Service
 {
