@@ -26,12 +26,15 @@
         "symfony/var-dumper": "^5.0",
         "squizlabs/php_codesniffer": "^3.5",
         "swoole/ide-helper": "^4.4",
-        "phpunit/phpunit": "^8.5.0"
+        "topphp/topphp-testing": "dev-master"
     },
     "autoload": {
         "psr-4": {
             "Topphp\\TopphpSwoole\\": "src"
-        }
+        },
+        "files": [
+            "src/helper.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
