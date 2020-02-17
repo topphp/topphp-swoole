@@ -26,7 +26,7 @@
         "symfony/var-dumper": "^5.0",
         "squizlabs/php_codesniffer": "^3.5",
         "swoole/ide-helper": "^4.4",
-        "topphp/topphp-testing": "dev-master"
+        "topphp/topphp-testing": "*"
     },
     "autoload": {
         "psr-4": {
@@ -42,7 +42,7 @@
         }
     },
     "scripts": {
-        "test": "./vendor/bin/phpunit -c ./phpunit.xml.dist",
+        "test": "./vendor/bin/co-phpunit -c ./phpunit.xml.dist",
         "check-style": "phpcs src tests",
         "fix-style": "phpcbf src tests",
         "post-root-package-install": []
@@ -60,8 +60,6 @@
             }
         }
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
     "config": {
         "sort-packages": true
     },

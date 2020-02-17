@@ -8,8 +8,8 @@ use Datto\JsonRpc\Client;
 use Datto\JsonRpc\Responses\ErrorResponse;
 use Datto\JsonRpc\Responses\ResultResponse;
 use Datto\JsonRpc\Server;
-use PHPUnit\Framework\TestCase;
 use Topphp\TopphpSwoole\SwooleApp;
+use Topphp\TopphpTesting\TestCase;
 
 class ExampleTest extends TestCase
 {
