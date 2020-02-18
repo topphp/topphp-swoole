@@ -108,6 +108,30 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
         self::sendResponse($res, $response, $app->cookie);
     }
 
+    private static function makeFile($request)
+    {
+        $files = [];
+        if (isset($request->files)) {
+            if (is_array($request->files)) {
+                $inFile = [];
+                foreach ($request->files as $inputFile => $file) {
+                    $inFile[$inputFile] = [];
+                    foreach ($file as $value) {
+                        $inFile[$inputFile]["name"][]     = $value["name"];
+                        $inFile[$inputFile]["type"][]     = $value["type"];
+                        $inFile[$inputFile]["tmp_name"][] = $value["tmp_name"];
+                        $inFile[$inputFile]["error"][]    = $value["error"];
+                        $inFile[$inputFile]["size"][]     = $value["size"];
+                    }
+                }
+                $files = $inFile;
+            } else {
+                $files = $request->files;
+            }
+        }
+        return $files;
+    }
+
     private static function prepareRequest(Request $req)
     {
         $header = $req->header ?: [];
@@ -125,7 +149,7 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
             ->withGet($req->get ?: [])
             ->withPost($req->post ?: [])
             ->withCookie($req->cookie ?: [])
-            ->withFiles($req->files ?: [])
+            ->withFiles(self::makeFile($req) ?: [])
             ->withInput($req->rawContent())
             ->setBaseUrl($req->server['request_uri'])
             ->setUrl($req->server['request_uri'] . (!empty($req->server['query_string'])
