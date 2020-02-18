@@ -108,7 +108,7 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
         self::sendResponse($res, $response, $app->cookie);
     }
 
-    private static function makeFile($request)
+    private static function makeFile(Request $request)
     {
         $files = [];
         if (isset($request->files)) {
@@ -116,12 +116,16 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
                 $inFile = [];
                 foreach ($request->files as $inputFile => $file) {
                     $inFile[$inputFile] = [];
-                    foreach ($file as $value) {
-                        $inFile[$inputFile]["name"][]     = $value["name"];
-                        $inFile[$inputFile]["type"][]     = $value["type"];
-                        $inFile[$inputFile]["tmp_name"][] = $value["tmp_name"];
-                        $inFile[$inputFile]["error"][]    = $value["error"];
-                        $inFile[$inputFile]["size"][]     = $value["size"];
+                    foreach ($file as $key => $value) {
+                        if (is_array($value)) {
+                            $inFile[$inputFile]["name"][]     = $value["name"];
+                            $inFile[$inputFile]["type"][]     = $value["type"];
+                            $inFile[$inputFile]["tmp_name"][] = $value["tmp_name"];
+                            $inFile[$inputFile]["error"][]    = $value["error"];
+                            $inFile[$inputFile]["size"][]     = $value["size"];
+                        } else {
+                            $inFile[$inputFile][$key] = $value;
+                        }
                     }
                 }
                 $files = $inFile;
@@ -143,7 +147,6 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
         // 重新实例化请求对象 处理swoole请求数据
         /** @var \think\Request $request */
         $request = App::getInstance()->make('request', [], true);
-
         return $request->withHeader($header)
             ->withServer($server)
             ->withGet($req->get ?: [])
