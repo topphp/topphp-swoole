@@ -50,7 +50,7 @@ return [
     'options' => [
         'pid_file'              => runtime_path() . 'topphp_swoole.pid',
         'log_file'              => runtime_path() . 'topphp_swoole.log',
-        'daemonize'             => false,   // 是否开启守护进程
+        'daemonize'             => !env('APP_DEBUG'),   // 是否开启守护进程
         // Normally this value should be 1~4 times larger according to your cpu cores.
         'reactor_num'           => swoole_cpu_num(),
         'worker_num'            => swoole_cpu_num(),

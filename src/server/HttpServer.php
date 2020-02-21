@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Topphp\TopphpSwoole\server;
 
+use think\Http;
 use Throwable;
 use think\Cookie;
 use think\facade\App;
@@ -101,11 +102,30 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
         $app     = App::getInstance();
         $request = self::prepareRequest($req);
         try {
-            $response = $app->http->run($request);
+            $response = self::handleRequest($app->http, $request);
         } catch (Throwable $e) {
             $response = $app->make(Handle::class)->render($request, $e);
         }
         self::sendResponse($res, $response, $app->cookie);
+    }
+
+    protected static function handleRequest(Http $http, $request)
+    {
+        $level = ob_get_level();
+        ob_start();
+        $response = $http->run($request);
+        $content  = $response->getContent();
+        if (ob_get_level() == 0) {
+            ob_start();
+        }
+        $http->end($response);
+        if (ob_get_length() > 0) {
+            $response->content(ob_get_contents() . $content);
+        }
+        while (ob_get_level() > $level) {
+            ob_end_clean();
+        }
+        return $response;
     }
 
     private static function makeFile(Request $request)
@@ -171,7 +191,7 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
     {
         // 设置header
         foreach ($response->getHeader() as $key => $val) {
-            $res->setHeader($key, $val);
+            $res->setHeader($key, (string)$val);
         }
         //设置状态码
         $code = $response->getCode();
