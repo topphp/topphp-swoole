@@ -109,7 +109,7 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
         self::sendResponse($res, $response, $app->cookie);
     }
 
-    protected static function handleRequest(Http $http, $request)
+    protected static function handleRequest(Http $http, \think\Request $request)
     {
         $level = ob_get_level();
         ob_start();
@@ -123,7 +123,7 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
             $response->content(ob_get_contents() . $content);
         }
         while (ob_get_level() > $level) {
-            ob_end_clean();
+            @ob_end_clean();
         }
         return $response;
     }
@@ -156,7 +156,7 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
         return $files;
     }
 
-    private static function prepareRequest(Request $req)
+    private static function prepareRequest(Request $req): \think\Request
     {
         $header = $req->header ?: [];
         $server = $req->server ?: [];
