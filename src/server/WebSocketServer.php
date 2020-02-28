@@ -13,6 +13,7 @@ use Swoole\Http\Request as SwooleHttpRequest;
 use Swoole\Http\Response as SwooleHttpResponse;
 use Swoole\WebSocket\Frame as SwooleFrame;
 use Swoole\WebSocket\Server as SwooleWebSocketServer;
+use think\facade\App;
 use Topphp\TopphpSwoole\contract\SwooleWebSocketServerInterface;
 use Topphp\TopphpSwoole\SwooleEvent;
 
@@ -29,16 +30,26 @@ class WebSocketServer extends SwooleWebSocketServer implements SwooleWebSocketSe
 
     public static function onOpen(SwooleWebSocketServer $server, SwooleHttpRequest $request): void
     {
+        App::getInstance()->event->trigger('topphp.WebSocketServer.onOpen', [
+            'server'  => $server,
+            'request' => $request,
+        ]);
         echo "$request->fd\n";
-    }
-
-    public static function onHandShake(SwooleHttpRequest $request, SwooleHttpResponse $response): void
-    {
-        // TODO: Implement onOpen() method.
     }
 
     public static function onMessage(SwooleWebSocketServer $server, SwooleFrame $frame): void
     {
-        // TODO: Implement onMessage() method.
+        App::getInstance()->event->trigger('topphp.WebSocketServer.onMessage', [
+            'server' => $server,
+            'frame'  => $frame,
+        ]);
+    }
+
+    public static function onHandShake(SwooleHttpRequest $request, SwooleHttpResponse $response): void
+    {
+        App::getInstance()->event->trigger('topphp.WebSocketServer.onHandShake', [
+            'request'  => $request,
+            'response' => $response,
+        ]);
     }
 }

@@ -105,12 +105,4 @@ class SwooleEvent
      * Before server start, it's not a swoole event.
      */
     const ON_BEFORE_START = 'beforeStart';
-
-//    public static function isSwooleEvent($event): bool
-//    {
-//        if (in_array($event, [self::ON_BEFORE_START])) {
-//            return false;
-//        }
-//        return true;
-//    }
 }

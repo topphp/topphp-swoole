@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Topphp\TopphpSwoole\server;
 
 use Swoole\Server as SwooleServer;
+use think\facade\App;
 use Topphp\TopphpSwoole\contract\SwooleServerInterface;
 use Topphp\TopphpSwoole\SwooleEvent;
 
@@ -25,11 +26,19 @@ class TcpServer extends SwooleServer implements SwooleServerInterface
 
     public static function onConnect(SwooleServer $server, int $fd): void
     {
-        // TODO: Implement onConnect() method.
+        App::getInstance()->event->trigger('topphp.RpcServer.onConnect', [
+            'server' => $server,
+            'fd'     => $fd
+        ]);
     }
 
     public static function onReceive(SwooleServer $server, int $fd, int $reactorId, string $data): void
     {
-        // TODO: Implement onReceive() method.
+        App::getInstance()->event->trigger('topphp.RpcServer.onReceive', [
+            'server'    => $server,
+            'fd'        => $fd,
+            'reactorId' => $reactorId,
+            'data'      => $data
+        ]);
     }
 }

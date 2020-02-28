@@ -10,34 +10,34 @@ declare(strict_types=1);
 namespace Topphp\TopphpSwoole\server;
 
 use Swoole\Server as SwooleServer;
+use think\facade\App;
 use Topphp\TopphpSwoole\contract\SwooleServerInterface;
+use Topphp\TopphpSwoole\server\jsonrpc\Server;
+use Topphp\TopphpSwoole\SwooleApp;
 
 class RpcServer extends TcpServer implements SwooleServerInterface
 {
-
     public static function onConnect(SwooleServer $server, int $fd): void
     {
-        // TODO: Implement onConnect() method.
+        App::getInstance()->event->trigger('topphp.RpcServer.onConnect', ['server' => $server, 'fd' => $fd]);
     }
 
     public static function onReceive(SwooleServer $server, int $fd, int $reactorId, string $data): void
     {
-        $request  = null;
-        $response = null;
+        App::getInstance()->event->trigger('topphp.RpcServer.onReceive', [
+            'server'    => $server,
+            'fd'        => $fd,
+            'reactorId' => $reactorId,
+            'data'      => $data
+        ]);
+        self::buildRpcRequest($server, $fd, $reactorId, $data);
     }
 
-//    private static function buildRequest(int $fd, int $fromId, string $data)
-//    {
-//    }
-//
-//    private static function buildResponse(int $fd, SwooleServer $server, Response $response)
-//    {
-//
-//    }
-
-//    public static function mySend(SwooleServer $server, int $fd, $response): void
-//    {
-//
-//        $server->send($fd, (string)$response->getBody());
-//    }
+    private static function buildRpcRequest(SwooleServer $server, int $fd, int $reactorId, string $data)
+    {
+        $app       = new SwooleApp();
+        $rpcServer = new Server($app);
+        $reply     = $rpcServer->reply($data);
+        $server->send($fd, $reply);
+    }
 }

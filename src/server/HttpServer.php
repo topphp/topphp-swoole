@@ -106,6 +106,12 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
         } catch (Throwable $e) {
             $response = $app->make(Handle::class)->render($request, $e);
         }
+        $app->event->trigger('topphp.HttpServer.onRequest', [
+            'request'        => $request,
+            'response'       => $response,
+            'swooleRequest'  => $req,
+            'swooleResponse' => $res,
+        ]);
         self::sendResponse($res, $response, $app->cookie);
     }
 
