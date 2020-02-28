@@ -7,7 +7,7 @@
  */
 declare(strict_types=1);
 
-namespace Topphp\TopphpSwoole\server\rpc;
+namespace Topphp\TopphpSwoole\server\jsonrpc;
 
 class Packer
 {

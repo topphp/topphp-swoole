@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Topphp\TopphpSwoole;
 
 use think\facade\App;
-use Datto\JsonRpc\Evaluator;
-use Datto\JsonRpc\Exceptions\MethodException;
+use Topphp\TopphpSwoole\server\jsonrpc\Evaluator;
+use Topphp\TopphpSwoole\server\jsonrpc\exceptions\MethodException;
 
 class SwooleApp extends App implements Evaluator
 {
@@ -25,7 +25,7 @@ class SwooleApp extends App implements Evaluator
      *
      * @return string Returns the phrase passed in
      */
-    public function echoPhrase(string $phrase): string
+    public function echoPhrase(string $phrase = ''): ?string
     {
         return $phrase;
     }
