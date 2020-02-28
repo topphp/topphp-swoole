@@ -8,10 +8,11 @@
 
 use Topphp\TopphpSwoole\server\HttpServer;
 use Topphp\TopphpSwoole\server\RpcServer;
+use Topphp\TopphpSwoole\server\TcpServer;
 use Topphp\TopphpSwoole\server\WebSocketServer;
 
 return [
-    'mode'    => SWOOLE_PROCESS,                  // 运行模式 默认为SWOOLE_PROCESS
+    'mode'    => SWOOLE_PROCESS,                  // 运行模式为SWOOLE_PROCESS时支持热重启.
     'servers' => [
         [
             'type'      => HttpServer::class,
@@ -20,7 +21,6 @@ return [
             'port'      => 9501,                            // 监听端口
             'sock_type' => SWOOLE_SOCK_TCP,
             'options'   => [
-                'open_http_protocol'      => true,
                 'open_websocket_protocol' => true
             ]
         ],
@@ -31,19 +31,24 @@ return [
             'port'      => 9502,                            // 监听端口
             'sock_type' => SWOOLE_SOCK_TCP,
             'options'   => [
-                'open_http_protocol'      => true,
-                'open_websocket_protocol' => true
             ]
         ],
         [
-            'type'      => WebSocketServer::class,
+            'type'      => TcpServer::class,
             'name'      => 'top-server3',
             'host'      => env('SWOOLE_HOST', '127.0.0.1'), // 监听地址
             'port'      => 9503,                            // 监听端口
             'sock_type' => SWOOLE_SOCK_TCP,
             'options'   => [
-                'open_http_protocol'      => true,
-                'open_websocket_protocol' => true
+            ]
+        ],
+        [
+            'type'      => WebSocketServer::class,
+            'name'      => 'top-server4',
+            'host'      => env('SWOOLE_HOST', '127.0.0.1'), // 监听地址
+            'port'      => 9504,                            // 监听端口
+            'sock_type' => SWOOLE_SOCK_TCP,
+            'options'   => [
             ]
         ],
     ],
@@ -63,6 +68,9 @@ return [
         'buffer_output_size'    => 10 * 1024 * 1024,
         'socket_buffer_size'    => 128 * 1024 * 1024,
         'max_request'           => 3000,
+        'max_wait_time'         => 60,
         'send_yield'            => true,
+        'reload_async'          => true,
+        'enable_coroutine'      => true,
     ],
 ];

@@ -10,12 +10,13 @@ declare(strict_types=1);
 namespace Topphp\TopphpSwoole\command;
 
 use Swoole\Coroutine;
+use Swoole\Process;
 use Swoole\Runtime;
 use Swoole\Server;
 use think\console\Command;
 use think\console\input\Argument;
 use think\helper\Str;
-use Topphp\TopphpSwoole\PidManager;
+use Topphp\TopphpSwoole\FileWatcher;
 use Topphp\TopphpSwoole\server\BaseServer;
 use Topphp\TopphpSwoole\server\HttpServer;
 use Topphp\TopphpSwoole\server\TcpServer;
@@ -94,6 +95,9 @@ class SwooleServer extends Command
         }
         // 添加基础监听
         $this->setDefaultSwooleServerListeners($this->server);
+        if (env('APP_DEBUG')) {
+            $this->hotUpdate();
+        }
         $this->startServer();
     }
 
@@ -131,9 +135,24 @@ class SwooleServer extends Command
         }
     }
 
+    /**
+     * 热更新
+     * @author sleep
+     */
+    private function hotUpdate()
+    {
+        $process = new Process(function () {
+            $watcher = new FileWatcher([app_path()], [], ["*.php"]);
+            $watcher->watch(function () {
+                $this->server->reload();
+            });
+        }, false, 0);
+        $this->server->addProcess($process);
+    }
+
     private function startServer()
     {
-        Runtime::enableCoroutine(true, defined('SWOOLE_HOOK_FLAGS') ? SWOOLE_HOOK_FLAGS : SWOOLE_HOOK_ALL);
+        Runtime::enableCoroutine(true);
         $this->server->start();
     }
 
@@ -146,14 +165,12 @@ class SwooleServer extends Command
     private function sortServers($servers)
     {
         $sortServer           = [];
-        $issetHttpServer      = false;
         $issetWebSocketServer = false;
         foreach ($servers as $key => $server) {
             /** @var ServerConfig[] $cfg */
             $cfg[$key] = $this->app->make(ServerConfig::class, [$server], true);
             switch ($cfg[$key]->getType()) {
                 case HttpServer::class:
-                    $issetHttpServer = true;
                     if ($issetWebSocketServer) {
                         $sortServer[] = $cfg[$key];
                     } else {

@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Topphp\TopphpSwoole\server;
 
+use RuntimeException;
 use Swoole\Server as SwooleServer;
 use Topphp\TopphpSwoole\SwooleEvent;
 
@@ -25,6 +26,63 @@ class BaseServer
         ];
     }
 
+    private static function create(int $masterPid, int $managerPid)
+    {
+        $file = config('topphpServer.options.pid_file');
+        if (!is_writable($file)
+            && !is_writable(dirname($file))
+        ) {
+            throw new RuntimeException(
+                sprintf('Pid file "%s" is not writable', $file)
+            );
+        }
+        file_put_contents($file, $masterPid . ',' . $managerPid);
+    }
+
+    /**
+     * @author sleep
+     * 如果 PHP 开启了 APC/OpCache，reload 重载入时会受到影响
+     * 在 onWorkerStart 中执行 apc_clear_cache 或 opcache_reset 刷新 OpCode 缓存
+     */
+    private static function clearCache()
+    {
+        if (extension_loaded('apc')) {
+            apc_clear_cache();
+        }
+
+        if (extension_loaded('Zend OPcache')) {
+            opcache_reset();
+        }
+    }
+
+    /**
+     * Set process name.
+     *
+     * @param $process
+     */
+    private static function setProcessName($process)
+    {
+        // Mac OSX不支持进程重命名
+        if (stristr(PHP_OS, 'DAR')) {
+            return;
+        }
+        $serverName = 'swoole_http_server';
+        $appName    = config('app.name', 'topphp');
+        $name       = sprintf('%s: %s for %s', $serverName, $process, $appName);
+        swoole_set_process_name($name);
+    }
+
+    /**
+     * 在这个回调函数中可以修改管理进程的名称。
+     * @param SwooleServer $server
+     * @author sleep
+     */
+    public static function onManagerStart(SwooleServer $server): void
+    {
+        self::setProcessName('manager process ' . $server->manager_pid);
+        echo 'onManagerStart' . PHP_EOL;
+    }
+
     /**
      * 此事件在Worker进程/Task进程启动时发生。这里创建的对象可以在进程生命周期内使用。
      * 设置了worker_num和task_worker_num超过1时，每个进程都会触发一次onWorkerStart事件，可通过判断$worker_id区分不同的工作进程
@@ -34,11 +92,15 @@ class BaseServer
      */
     public static function onWorkerStart(SwooleServer $server, int $workerId): void
     {
+        self::clearCache();
+        self::setProcessName($server->taskworker ? 'task process' : 'worker process');
         echo "workerId: $workerId is working\n";
     }
 
     public static function onStart(SwooleServer $server): void
     {
+        self::setProcessName('master process');
+        self::create($server->master_pid, $server->manager_pid ?? 0);
         echo "server is started: {$server->host}:{$server->port}\n";
     }
 
@@ -87,16 +149,6 @@ class BaseServer
         int $signal
     ): void {
         echo "workerId: $workerId,workerPid:$workerPid is error\n";
-    }
-
-    /**
-     * 在这个回调函数中可以修改管理进程的名称。
-     * @param SwooleServer $server
-     * @author sleep
-     */
-    public static function onManagerStart(SwooleServer $server): void
-    {
-        // todo 在这个回调函数中可以修改管理进程的名称。
     }
 
     /**
