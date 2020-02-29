@@ -109,11 +109,9 @@ class SwooleServer extends Command
     {
         $baseEvents = BaseServer::getEvents();
         foreach ($baseEvents as $baseEvent) {
-            Coroutine::create(function () use ($baseEvent, $server) {
-                $listener = Str::camel("on_$baseEvent");
-                $callback = [BaseServer::class, $listener];
-                $server->on($baseEvent, $callback);
-            });
+            $listener = Str::camel("on_$baseEvent");
+            $callback = [BaseServer::class, $listener];
+            $server->on($baseEvent, $callback);
         }
     }
 
@@ -127,11 +125,9 @@ class SwooleServer extends Command
     {
         $events = $class::getEvents();
         foreach ($events as $event) {
-            Coroutine::create(function () use ($class, $server, $event) {
-                $listener = Str::camel("on_$event");
-                $callback = [$class, $listener];
-                $server->on($event, $callback);
-            });
+            $listener = Str::camel("on_$event");
+            $callback = [$class, $listener];
+            $server->on($event, $callback);
         }
     }
 
@@ -144,6 +140,8 @@ class SwooleServer extends Command
         $process = new Process(function () {
             $watcher = new FileWatcher([app_path()], [], ["*.php"]);
             $watcher->watch(function () {
+                $date = date('Y-m-d H:i:s');
+                echo "[{$date}] server is reload" . PHP_EOL;
                 $this->server->reload();
             });
         }, false, 0);
