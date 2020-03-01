@@ -26,7 +26,7 @@ class TcpServer extends SwooleServer implements SwooleServerInterface
 
     public static function onConnect(SwooleServer $server, int $fd): void
     {
-        App::getInstance()->event->trigger('topphp.RpcServer.onConnect', [
+        App::getInstance()->event->trigger(TopServerEvent::ON_TCP_CONNECT, [
             'server' => $server,
             'fd'     => $fd
         ]);
@@ -34,7 +34,7 @@ class TcpServer extends SwooleServer implements SwooleServerInterface
 
     public static function onReceive(SwooleServer $server, int $fd, int $reactorId, string $data): void
     {
-        App::getInstance()->event->trigger('topphp.RpcServer.onReceive', [
+        App::getInstance()->event->trigger(TopServerEvent::ON_TCP_RECEIVE, [
             'server'    => $server,
             'fd'        => $fd,
             'reactorId' => $reactorId,

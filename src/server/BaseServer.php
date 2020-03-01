@@ -62,7 +62,7 @@ class BaseServer
     public static function onTask(SwooleServer $server, $taskId, $fromId, string $data): void
     {
         echo "New AsyncTask[id=$taskId]\n";
-        App::getInstance()->event->trigger('topphp.BaseServer.onTask', [
+        App::getInstance()->event->trigger(TopServerEvent::ON_TASK, [
             'server' => $server,
             'taskId' => $taskId,
             'fromId' => $fromId,
@@ -73,7 +73,7 @@ class BaseServer
 
     public static function onPipeMessage(SwooleServer $server, $workerId, string $data): void
     {
-        App::getInstance()->event->trigger('topphp.BaseServer.onPipeMessage', [
+        App::getInstance()->event->trigger(TopServerEvent::ON_PIPE_MESSAGE, [
             'server'   => $server,
             'workerId' => $workerId,
             'data'     => $data
@@ -83,7 +83,7 @@ class BaseServer
 
     public static function onClose(SwooleServer $server, int $fd, int $reactorId): void
     {
-        App::getInstance()->event->trigger('topphp.BaseServer.onClose', [
+        App::getInstance()->event->trigger(TopServerEvent::ON_CLOSE, [
             'server'    => $server,
             'fd'        => $fd,
             'reactorId' => $reactorId
@@ -100,7 +100,7 @@ class BaseServer
      */
     public static function onWorkerStop(SwooleServer $server, int $workerId): void
     {
-        App::getInstance()->event->trigger('topphp.BaseServer.onWorkerStop', [
+        App::getInstance()->event->trigger(TopServerEvent::ON_WORKER_STOP, [
             'server'   => $server,
             'workerId' => $workerId
         ]);
@@ -123,7 +123,7 @@ class BaseServer
         int $exitCode,
         int $signal
     ): void {
-        App::getInstance()->event->trigger('topphp.BaseServer.onWorkerError', [
+        App::getInstance()->event->trigger(TopServerEvent::ON_WORKER_ERROR, [
             'server'    => $server,
             'workerId'  => $workerId,
             'workerPid' => $workerPid,
@@ -141,7 +141,7 @@ class BaseServer
     public static function onManagerStop(SwooleServer $server): void
     {
         // todo onManagerStop触发时，说明Task和Worker进程已结束运行，已被Manager进程回收。
-        App::getInstance()->event->trigger('topphp.BaseServer.onWorkerError', [
+        App::getInstance()->event->trigger(TopServerEvent::ON_MANAGER_STOP, [
             'server' => $server
         ]);
     }

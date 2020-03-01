@@ -9,9 +9,12 @@ declare(strict_types=1);
 
 namespace Topphp\TopphpSwoole\server;
 
+use RuntimeException;
 use Swoole\Server as SwooleServer;
 use think\facade\App;
 use Topphp\TopphpSwoole\contract\SwooleServerInterface;
+use Topphp\TopphpSwoole\server\jsonrpc\Client;
+use Topphp\TopphpSwoole\server\jsonrpc\Packer;
 use Topphp\TopphpSwoole\server\jsonrpc\Server;
 use Topphp\TopphpSwoole\SwooleApp;
 
@@ -19,12 +22,12 @@ class RpcServer extends TcpServer implements SwooleServerInterface
 {
     public static function onConnect(SwooleServer $server, int $fd): void
     {
-        App::getInstance()->event->trigger('topphp.RpcServer.onConnect', ['server' => $server, 'fd' => $fd]);
+        App::getInstance()->event->trigger(TopServerEvent::ON_RPC_CONNECT, ['server' => $server, 'fd' => $fd]);
     }
 
     public static function onReceive(SwooleServer $server, int $fd, int $reactorId, string $data): void
     {
-        App::getInstance()->event->trigger('topphp.RpcServer.onReceive', [
+        App::getInstance()->event->trigger(TopServerEvent::ON_RPC_RECEIVE, [
             'server'    => $server,
             'fd'        => $fd,
             'reactorId' => $reactorId,
@@ -35,9 +38,18 @@ class RpcServer extends TcpServer implements SwooleServerInterface
 
     private static function buildRpcRequest(SwooleServer $server, int $fd, int $reactorId, string $data)
     {
-        $app       = new SwooleApp();
-        $rpcServer = new Server($app);
-        $reply     = $rpcServer->reply($data);
-        $server->send($fd, $reply);
+        try {
+            $data = Packer::unpack($data);
+            [$class] = explode('@', $data['id']);
+            $app       = App::getInstance()->getService($class);
+            $rpcServer = App::getInstance()->make(Server::class, [$app]);
+            $reply     = $rpcServer->reply(Packer::pack($data));
+            $server->send($fd, $reply);
+        } catch (\Exception $e) {
+            // todo 这块处理不好,以后优化
+            $rpcServer = App::getInstance()->make(Server::class);
+            $reply     = $rpcServer->reply($data);
+            $server->send($fd, $reply);
+        }
     }
 }
