@@ -16,6 +16,7 @@ use Topphp\TopphpSwoole\server\jsonrpc\exceptions\MethodException;
 use Topphp\TopphpSwoole\server\jsonrpc\Packer;
 use Topphp\TopphpSwoole\server\jsonrpc\responses\ErrorResponse;
 use Topphp\TopphpSwoole\server\jsonrpc\Server;
+use Topphp\TopphpSwoole\ServerConfig;
 
 class RpcServer extends TcpServer
 {
@@ -39,7 +40,7 @@ class RpcServer extends TcpServer
     {
         try {
             $data = Packer::unpack($data);
-            [$serverName, $method] = explode('@', $data['method']);
+            [$serverName, $id, $method] = explode('@', $data['method']);
             /** @var SwooleServer\Port $port */
             foreach ($server->ports as $port) {
                 try {
@@ -47,10 +48,12 @@ class RpcServer extends TcpServer
                     /** @var SwooleServer\Port $rpcServer */
                     $rpcServer = App::getInstance()->get($serverName . ':' . $port->port);
                 } catch (\Exception $e) {
+                    var_dump($e->getMessage());
                     continue;
                 }
-                if ($rpcServer && ($rpcServer->port === $port->port)) {
-                    $rpcService = App::getInstance()->get($serverName);
+                // 比较当前监听端口是否是该服务
+                if ($server->connection_info($fd)['server_port'] === $rpcServer->port) {
+                    $rpcService = App::getInstance()->get($serverName . '@' . $id);
                     if (!$rpcService) {
                         throw new MethodException();
                     }
@@ -74,5 +77,18 @@ class RpcServer extends TcpServer
             ];
             $server->send($fd, Packer::pack($data));
         }
+    }
+
+    private static function getConfig($serverName)
+    {
+        $serverConfigs = App::getInstance()->config->get('topphpServer.servers');
+        foreach ($serverConfigs as $config) {
+            /** @var ServerConfig $config */
+            $config = App::getInstance()->make(ServerConfig::class, [$config], true);
+            if ($serverName === $config->getName()) {
+                return $config->getPort();
+            }
+        }
+        return false;
     }
 }

@@ -20,17 +20,20 @@ use Doctrine\Common\Annotations\Annotation\Target;
 final class Rpc
 {
     /**
+     * 全局唯一标识,服务注册时用到
+     * @Required
+     */
+    public $id;
+
+    /**
      * 服务名
+     * 与config/topphpServer.php里的 servers.name 对应
      * @Required
      */
     public $name;
 
     /**
-     * 和 config/topphpServer.php里的 servers.name 对应
-     * @Required
-     */
-    public $server;
-    /**
+     * 服务协议,目前仅支持 jsonrpc
      * @Required
      * @Enum({"jsonrpc","http-jsonrpc"})
      */

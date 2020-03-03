@@ -45,7 +45,7 @@ class Service extends \think\Service
                     /** @var Rpc $rpcAnnotation */
                     $rpcAnnotation = $reader->getClassAnnotation($ref, Rpc::class);
                     if ($rpcAnnotation) {
-                        $this->app->bind($rpcAnnotation->server, $ref->getName());
+                        $this->app->bind($rpcAnnotation->name . '@' . $rpcAnnotation->id, $ref->getName());
 //                        $rpcService[$rpcAnnotation->server] = $ref->getName();
                     }
                 }
