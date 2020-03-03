@@ -56,7 +56,9 @@ class BaseServer
     {
         self::setProcessName('master process');
         self::create($server->master_pid, $server->manager_pid ?? 0);
-        echo "server is started: {$server->host}:{$server->port}\n";
+        foreach ($server->ports as $port) {
+            echo "server is started: {$server->host}:{$port->port}\n";
+        }
     }
 
     public static function onTask(SwooleServer $server, $taskId, $fromId, string $data): void

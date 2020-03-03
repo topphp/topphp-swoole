@@ -12,20 +12,26 @@ use Doctrine\Common\Annotations\Annotation;
 use Doctrine\Common\Annotations\Annotation\Enum;
 use Doctrine\Common\Annotations\Annotation\Required;
 use Doctrine\Common\Annotations\Annotation\Target;
-use Topphp\TopphpSwoole\server\jsonrpc\Evaluator;
 
 /**
  * @Annotation
  * @Target("CLASS")
  */
-class RpcService
+final class Rpc
 {
     /**
-     * 服务类名
+     * 服务名
      * @Required
      */
     public $name;
+
     /**
+     * 和 config/topphpServer.php里的 servers.name 对应
+     * @Required
+     */
+    public $server;
+    /**
+     * @Required
      * @Enum({"jsonrpc","http-jsonrpc"})
      */
     public $protocol;
@@ -34,12 +40,4 @@ class RpcService
      * @Enum({"consul"})
      */
     public $publish;
-
-    /**
-     * @inheritDoc
-     */
-    public function evaluate($method, $arguments)
-    {
-        // TODO: Implement evaluate() method.
-    }
 }

@@ -12,6 +12,7 @@ use Topphp\TopphpSwoole\server\jsonrpc\Client;
 use Topphp\TopphpSwoole\server\jsonrpc\responses\ErrorResponse;
 use Topphp\TopphpSwoole\server\jsonrpc\responses\ResultResponse;
 use Topphp\TopphpSwoole\server\jsonrpc\Server;
+use Topphp\TopphpSwoole\SubApp;
 use Topphp\TopphpSwoole\SwooleApp;
 use Topphp\TopphpTesting\HttpTestCase;
 
@@ -23,7 +24,7 @@ class RpcTest extends HttpTestCase
         $c = new Client();
 //        $c->query(1, 'echoPhrase1', ['hahaha']);
 //        $c->query(2, 'echoPhrase');
-        $aa     = $c->query(SwooleApp::class . '@123', 'echoPhrase', ['888']);
+        $aa     = $c->query(SubApp::class . '@123', 'echoPhrase', ['888']);
         $encode = $c->encode();
         $obj    = json_decode($encode, true)['id'];
         $obj    = explode('@', $obj);

@@ -20,7 +20,8 @@
         "php": "~7.2",
         "ext-json": "*",
         "ext-swoole": ">=4.4.6",
-        "symfony/finder": "^5.0",
+        "doctrine/reflection": "^1.1",
+        "symfony/finder": "^4.0",
         "topthink/framework": "^6.0.2",
         "topthink/think-annotation": "*"
     },
@@ -55,7 +56,8 @@
         },
         "think": {
             "services": [
-                "Topphp\\TopphpSwoole\\services\\Service"
+                "Topphp\\TopphpSwoole\\services\\Service",
+                "Topphp\\TopphpSwoole\\services\\RpcService"
             ],
             "config": {
                 "topphpServer": "config/topphpServer.php"

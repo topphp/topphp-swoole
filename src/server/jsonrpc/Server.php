@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace Topphp\TopphpSwoole\server\jsonrpc;
 
 use Topphp\TopphpSwoole\server\jsonrpc\exceptions\Exception;
-use Topphp\TopphpSwoole\server\jsonrpc\exceptions\ImplementationException;
 use Topphp\TopphpSwoole\server\jsonrpc\responses\ErrorResponse;
 
 /**
