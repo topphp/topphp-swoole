@@ -25,7 +25,7 @@ use Topphp\TopphpSwoole\server\jsonrpc\exceptions\MethodException;
 class RpcService extends Service implements Evaluator
 {
     /**
-     * @inheritDoc 通过反射获取public方法作为rpc调用
+     * @inheritDoc 通过反射仅获取public方法作为rpc调用
      * @param $method
      * @param $arguments
      * @return mixed
@@ -34,7 +34,6 @@ class RpcService extends Service implements Evaluator
      */
     public function evaluate($method, $arguments)
     {
-        var_dump(static::class);
         $ref               = new ReflectionClass(static::class);
         $reflectionMethods = $ref->getMethods(ReflectionMethod::IS_PUBLIC);
         $methods           = [];

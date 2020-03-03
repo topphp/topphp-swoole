@@ -11,18 +11,14 @@ namespace Topphp\TopphpSwoole\server;
 
 use Swoole\Server as SwooleServer;
 use think\facade\App;
-use Topphp\TopphpSwoole\annotation\Rpc;
 use Topphp\TopphpSwoole\server\jsonrpc\Evaluator;
 use Topphp\TopphpSwoole\server\jsonrpc\exceptions\MethodException;
 use Topphp\TopphpSwoole\server\jsonrpc\Packer;
 use Topphp\TopphpSwoole\server\jsonrpc\responses\ErrorResponse;
 use Topphp\TopphpSwoole\server\jsonrpc\Server;
-use Topphp\TopphpSwoole\ServerConfig;
 
 class RpcServer extends TcpServer
 {
-    protected static $serverName;
-
     public static function onConnect(SwooleServer $server, int $fd): void
     {
         App::getInstance()->event->trigger(TopServerEvent::ON_RPC_CONNECT, ['server' => $server, 'fd' => $fd]);
@@ -44,15 +40,29 @@ class RpcServer extends TcpServer
         try {
             $data = Packer::unpack($data);
             [$serverName, $method] = explode('@', $data['method']);
-            $rpcService = App::getInstance()->get($serverName);
-            if (!$rpcService) {
-                throw new MethodException();
+            /** @var SwooleServer\Port $port */
+            foreach ($server->ports as $port) {
+                try {
+                    // 判断该实例是否存在
+                    /** @var SwooleServer\Port $rpcServer */
+                    $rpcServer = App::getInstance()->get($serverName . ':' . $port->port);
+                } catch (\Exception $e) {
+                    continue;
+                }
+                if ($rpcServer && ($rpcServer->port === $port->port)) {
+                    $rpcService = App::getInstance()->get($serverName);
+                    if (!$rpcService) {
+                        throw new MethodException();
+                    }
+                    $data['method'] = $method;
+                    /** @var Evaluator $rpcService */
+                    $rpcServer = new Server($rpcService);
+                    $reply     = $rpcServer->reply(Packer::pack($data));
+                    $server->send($fd, $reply);
+                } else {
+                    throw new MethodException();
+                }
             }
-            $data['method'] = $method;
-            /** @var Evaluator $rpcService */
-            $rpcServer = new Server($rpcService);
-            $reply     = $rpcServer->reply(Packer::pack($data));
-            $server->send($fd, $reply);
         } catch (\Exception $e) {
             $data = [
                 'jsonrpc' => Server::VERSION,

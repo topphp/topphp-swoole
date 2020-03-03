@@ -9,17 +9,16 @@ declare(strict_types=1);
 
 namespace Topphp\TopphpSwoole\services;
 
+use ReflectionClass;
+use Symfony\Component\Finder\Finder;
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\AnnotationRegistry;
-use Symfony\Component\Finder\Finder;
 use Topphp\TopphpSwoole\annotation\Rpc;
 use Topphp\TopphpSwoole\command\SwooleServer;
-use Topphp\TopphpSwoole\server\jsonrpc\exceptions\MethodException;
 
 class Service extends \think\Service
 {
     /**
-     * @throws \Doctrine\Common\Annotations\AnnotationException
      * @throws \ReflectionException
      * @author sleep
      */
@@ -38,24 +37,24 @@ class Service extends \think\Service
                 if ($file->getRelativePath()) {
                     $class = '/app/' . $file->getRelativePath() . '/' . $file->getFilenameWithoutExtension();
                     $class = str_replace('/', '\\', $class);
-                    $ref   = new \ReflectionClass($class);
+                    $ref   = new ReflectionClass($class);
 
                     // 整理 rpc-server 到数组中
                     /** @var AnnotationReader $reader */
                     $reader = $this->app->make(AnnotationReader::class);
-                    /** @var Rpc $annotation */
-                    $annotation = $reader->getClassAnnotation($ref, Rpc::class);
-                    if ($annotation) {
-                        $this->app->bind($annotation->server, $ref->getName());
-                        $rpcService[$annotation->server] = $ref->getName();
+                    /** @var Rpc $rpcAnnotation */
+                    $rpcAnnotation = $reader->getClassAnnotation($ref, Rpc::class);
+                    if ($rpcAnnotation) {
+                        $this->app->bind($rpcAnnotation->server, $ref->getName());
+//                        $rpcService[$rpcAnnotation->server] = $ref->getName();
                     }
                 }
             }
         }
         // 绑定注解服务到容器中
-        $this->app->bind(Rpc::class, function () use ($rpcService) {
-            return $rpcService;
-        });
+//        $this->app->bind(Rpc::class, function () use ($rpcService) {
+//            return $rpcService;
+//        });
     }
 
     public function boot()

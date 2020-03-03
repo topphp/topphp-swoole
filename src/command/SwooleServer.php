@@ -91,7 +91,8 @@ class SwooleServer extends Command
             $slaveServer->set($option);
             // 添加监听事件
             $this->setSwooleServerListeners($slaveServer, $server->getType());
-            $this->app->bind($server->getName() . $server->getPort(), $slaveServer);
+            // 这里容器拼接为了rpc服务判断获取端口用
+            $this->app->bind($server->getName() . ':' . $server->getPort(), $slaveServer);
         }
         // 添加基础监听
         $this->setDefaultSwooleServerListeners($this->server);
