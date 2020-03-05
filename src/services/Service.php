@@ -19,7 +19,6 @@ use Topphp\TopphpSwoole\command\SwooleServer;
 class Service extends \think\Service
 {
     /**
-     * @throws \ReflectionException
      * @author sleep
      */
     public function register()
@@ -29,7 +28,7 @@ class Service extends \think\Service
         // 遍历 app 目录,扫描注解
         /** @var Finder $finder */
         $finder = $this->app->make(Finder::class);
-        $finder->files()->in(app_path());
+        $finder->files()->in(app_path())->name(['*Service.php', '*.php']);
         $rpcService = [];
         if (!$finder->hasResults()) {
             return;
@@ -40,7 +39,9 @@ class Service extends \think\Service
             }
             $class = '/app/' . $file->getRelativePath() . '/' . $file->getFilenameWithoutExtension();
             $class = str_replace('/', '\\', $class);
-            $ref   = new ReflectionClass($class);
+
+            /** @var ReflectionClass $ref */
+            $ref = $this->app->make(ReflectionClass::class, [$class]);
             // 整理 rpc-server 到数组中
             /** @var AnnotationReader $reader */
             $reader = $this->app->make(AnnotationReader::class);
