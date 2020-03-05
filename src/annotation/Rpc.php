@@ -23,14 +23,14 @@ final class Rpc
      * 全局唯一标识,服务注册时用到
      * @Required
      */
-    public $id;
+    public $serviceName;
 
     /**
      * 服务名
      * 与config/topphpServer.php里的 servers.name 对应
      * @Required
      */
-    public $name;
+    public $serverName;
 
     /**
      * 服务协议,目前仅支持 jsonrpc

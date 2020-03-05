@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 namespace Topphp\TopphpSwoole\services;
 
+use Exception;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
@@ -29,21 +30,25 @@ class RpcProviderService extends Service implements Evaluator
      * @param $method
      * @param $arguments
      * @return mixed
-     * @throws ReflectionException
+     * @throws Exception
      */
     public function evaluate($method, $arguments)
     {
-        $ref               = new ReflectionClass(static::class);
-        $reflectionMethods = $ref->getMethods(ReflectionMethod::IS_PUBLIC);
-        $methods           = [];
-        foreach ($reflectionMethods as $reflectionMethod) {
-            if ($reflectionMethod->class === static::class) {
-                $methods[] = $reflectionMethod->getName();
+        try {
+            $ref               = new ReflectionClass(static::class);
+            $reflectionMethods = $ref->getMethods(ReflectionMethod::IS_PUBLIC);
+            $methods           = [];
+            foreach ($reflectionMethods as $reflectionMethod) {
+                if ($reflectionMethod->class === static::class) {
+                    $methods[] = $reflectionMethod->getName();
+                }
             }
+            if (in_array($method, $methods)) {
+                return $this->$method(...$arguments);
+            }
+            throw new MethodException();
+        } catch (ReflectionException $e) {
+            throw new ReflectionException($e->getMessage());
         }
-        if (in_array($method, $methods)) {
-            return $this->$method(...$arguments);
-        }
-        throw new ReflectionException();
     }
 }

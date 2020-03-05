@@ -59,11 +59,10 @@ class SwooleServer extends Command
 
     private function initSwooleServer()
     {
-        $servers     = $this->app->config->get('topphpServer.servers');
-        $servers     = $this->sortServers($servers);
-        $mode        = $this->app->config->get('topphpServer.mode', SWOOLE_PROCESS);
-        $options     = $this->app->config->get('topphpServer.options');
-        $bindServers = [];
+        $servers = $this->app->config->get('topphpServer.servers');
+        $servers = $this->sortServers($servers);
+        $mode    = $this->app->config->get('topphpServer.mode', SWOOLE_PROCESS);
+        $options = $this->app->config->get('topphpServer.options');
         foreach ($servers as $server) {
             if (!$this->server instanceof Server) {
                 $serverClass = $server->getType();
@@ -93,10 +92,7 @@ class SwooleServer extends Command
             $slaveServer->set($option);
             // 添加监听事件
             $this->setSwooleServerListeners($slaveServer, $server->getType());
-            // 把同名服务组成数组,方便客户端随机调用
-            $bindServers[$server->getName()][] = $slaveServer;
         }
-        $this->app->session->set('bindServers', $bindServers);
 
         // 添加基础监听
         $this->setDefaultSwooleServerListeners($this->server);

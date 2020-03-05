@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Topphp\TopphpSwoole\server;
 
+use Exception;
 use Swoole\Server as SwooleServer;
 use think\facade\App;
 use Topphp\TopphpSwoole\server\jsonrpc\Evaluator;
@@ -40,36 +41,14 @@ class RpcServer extends TcpServer
         try {
             // todo 现在是单请求形式, 以后要改成多请求组成一个数组形式
             $data = Packer::unpack($data);
-            [$serverName, $id, $method] = explode('@', $data['method']);
-            $rpcServers = App::getInstance()->session->get('bindServers');
-            // 获取当前服务的端口
-            $currentServerPorts = [];
-            $currentServerHosts = [];
-            /** @var SwooleServer\Port[] $rpcServer */
-            foreach ($rpcServers as $key => $rpcServer) {
-                if ($key === $serverName) {
-                    foreach ($rpcServer as $item) {
-                        $currentServerHosts[] = $item->host;
-                        $currentServerPorts[] = $item->port;
-                    }
-                }
-            }
-            // 比较当前监听ip是否是该服务
-            // todo 这一步校验好像没什么用,因为ip肯定是对应的,还需要进一步测试
-            if (!in_array($server->connection_info($fd)['remote_ip'], $currentServerHosts)) {
-                throw new MethodException();
-            }
-            // 比较当前监听端口是否是该服务
-            if (!in_array($server->connection_info($fd)['server_port'], $currentServerPorts)) {
-                throw new MethodException();
-            }
+            [$serverName, $serviceName, $method] = explode('@', $data['method']);
             /** @var Evaluator $rpcService */
-            $rpcService     = App::getInstance()->get($id);
+            $rpcService     = App::getInstance()->get($serverName . '::' . $serviceName);
             $rpcServer      = new Server($rpcService);
             $data['method'] = $method;
             $reply          = $rpcServer->reply(Packer::pack($data));
             $server->send($fd, $reply);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $data = [
                 'jsonrpc' => Server::VERSION,
                 'id'      => $fd,

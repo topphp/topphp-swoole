@@ -70,11 +70,22 @@ return [
 
     'clients' => [
         [
-            'name'  => 'film-server',
-            'nodes' => [
+            'name'     => 'film-server',
+            'balancer' => 'random',
+            'nodes'    => [
                 ['host' => '0.0.0.0', 'port' => 9502],
-                ['host' => '0.0.0.0', 'port' => 9503]
-            ]
+                ['host' => '127.0.0.1', 'port' => 9503]
+            ],
+            'options' => []
+        ],
+        [
+            'name'     => 'cinema-server',
+            'balancer' => 'random',
+            'nodes'    => [
+                ['host' => '192.168.31.108', 'port' => 9502],
+                ['host' => '127.0.0.1', 'port' => 9503]
+            ],
+            'options' => []
         ]
     ],
 ];

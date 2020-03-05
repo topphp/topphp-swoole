@@ -35,7 +35,6 @@ class Service extends \think\Service
             return;
         }
         foreach ($finder as $file) {
-            var_dump($file->getFilename());
             if (!$file->getRelativePath()) {
                 continue;
             }
@@ -54,7 +53,7 @@ class Service extends \think\Service
             if ($rpcAnnotation) {
                 //todo 判断当前是否 $rpcAnnotation->name 不在配置文件中
 
-                $this->app->bind($rpcAnnotation->id, $ref->getName());
+                $this->app->bind($rpcAnnotation->serverName . '::' . $rpcAnnotation->serviceName, $ref->getName());
 //                $rpcService[$rpcAnnotation->name] = $ref->getName();
             }
         }
