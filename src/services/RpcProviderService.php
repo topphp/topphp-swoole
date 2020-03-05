@@ -19,10 +19,10 @@ use Topphp\TopphpSwoole\server\jsonrpc\exceptions\MethodException;
 
 /**
  * 用户服务继承该类
- * Class RpcService
+ * Class RpcProviderService
  * @package Topphp\TopphpSwoole\services
  */
-class RpcService extends Service implements Evaluator
+class RpcProviderService extends Service implements Evaluator
 {
     /**
      * @inheritDoc 通过反射仅获取public方法作为rpc调用

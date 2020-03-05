@@ -57,7 +57,7 @@
         "think": {
             "services": [
                 "Topphp\\TopphpSwoole\\services\\Service",
-                "Topphp\\TopphpSwoole\\services\\RpcService"
+                "Topphp\\TopphpSwoole\\services\\RpcProviderService"
             ],
             "config": {
                 "topphpServer": "config/topphpServer.php"

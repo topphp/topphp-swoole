@@ -44,6 +44,7 @@ class SwooleServer extends Command
         $action = $this->input->getArgument('action');
         switch ($action) {
             case 'start':
+                Coroutine::set(['hook_flags' => SWOOLE_HOOK_ALL]);//v4.4+版本使用此方法。
                 $this->app->bind(SwooleApp::class, $this->initSwooleServer());
                 break;
             default:
@@ -154,7 +155,7 @@ class SwooleServer extends Command
 
     private function startServer()
     {
-        Runtime::enableCoroutine(true);
+//        Runtime::enableCoroutine(true, defined('SWOOLE_HOOK_FLAGS') ? SWOOLE_HOOK_FLAGS : SWOOLE_HOOK_ALL);
         $this->server->start();
     }
 

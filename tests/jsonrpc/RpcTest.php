@@ -24,7 +24,7 @@ class RpcTest extends HttpTestCase
         $c = new Client();
 //        $c->query(1, 'echoPhrase1', ['hahaha']);
 //        $c->query(2, 'echoPhrase');
-        $aa     = $c->query(SubApp::class . '@123', 'echoPhrase', ['888']);
+        $aa     = $c->query(SwooleApp::class . '@123', 'echoPhrase', ['888']);
         $encode = $c->encode();
         $obj    = json_decode($encode, true)['id'];
         $obj    = explode('@', $obj);

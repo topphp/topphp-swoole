@@ -54,21 +54,18 @@ return [
         'log_file'              => runtime_path() . 'topphp_swoole.log',
         'daemonize'             => !env('APP_DEBUG'),   // 是否开启守护进程
         // Normally this value should be 1~4 times larger according to your cpu cores.
-        'reactor_num'           => swoole_cpu_num(),
         'worker_num'            => swoole_cpu_num(),
-        'task_worker_num'       => swoole_cpu_num(),
+        'task_worker_num'       => swoole_cpu_num(),    // 配置 Task 进程的数量。【默认值：未配置则不启动 task】
         'task_enable_coroutine' => true,
-        'task_max_request'      => 3000,
+        'task_max_request'      => 1000000,
         'enable_static_handler' => true,
         'document_root'         => root_path('public'),
         'package_max_length'    => 20 * 1024 * 1024,
         'buffer_output_size'    => 10 * 1024 * 1024,
         'socket_buffer_size'    => 128 * 1024 * 1024,
-        'max_request'           => 3000,
+        'max_request'           => 1000000,
         'max_wait_time'         => 60,
         'send_yield'            => true,
-        'reload_async'          => true,
-        'enable_coroutine'      => true,
     ],
 
     'clients' => [
