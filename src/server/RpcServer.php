@@ -16,7 +16,6 @@ use Topphp\TopphpSwoole\server\jsonrpc\exceptions\MethodException;
 use Topphp\TopphpSwoole\server\jsonrpc\Packer;
 use Topphp\TopphpSwoole\server\jsonrpc\responses\ErrorResponse;
 use Topphp\TopphpSwoole\server\jsonrpc\Server;
-use Topphp\TopphpSwoole\ServerConfig;
 
 class RpcServer extends TcpServer
 {
@@ -41,31 +40,34 @@ class RpcServer extends TcpServer
         try {
             $data = Packer::unpack($data);
             [$serverName, $id, $method] = explode('@', $data['method']);
-            /** @var SwooleServer\Port $port */
-            foreach ($server->ports as $port) {
-                try {
-                    // 判断该实例是否存在
-                    /** @var SwooleServer\Port $rpcServer */
-                    $rpcServer = App::getInstance()->get($serverName . ':' . $port->port);
-                } catch (\Exception $e) {
-                    var_dump($e->getMessage());
-                    continue;
-                }
-                // 比较当前监听端口是否是该服务
-                if ($server->connection_info($fd)['server_port'] === $rpcServer->port) {
-                    $rpcService = App::getInstance()->get($serverName . '@' . $id);
-                    if (!$rpcService) {
-                        throw new MethodException();
+            $rpcServers = App::getInstance()->session->get('bindServers');
+            // 获取当前服务的端口
+            $currentServerPorts = [];
+            $currentServerHosts = [];
+            /** @var SwooleServer\Port[] $rpcServer */
+            foreach ($rpcServers as $key => $rpcServer) {
+                if ($key === $serverName) {
+                    foreach ($rpcServer as $item) {
+                        $currentServerHosts[] = $item->host;
+                        $currentServerPorts[] = $item->port;
                     }
-                    $data['method'] = $method;
-                    /** @var Evaluator $rpcService */
-                    $rpcServer = new Server($rpcService);
-                    $reply     = $rpcServer->reply(Packer::pack($data));
-                    $server->send($fd, $reply);
-                } else {
-                    throw new MethodException();
                 }
             }
+            // 比较当前监听ip是否是该服务
+            // todo 这一步校验好像没什么用,因为ip肯定是对应的,还需要进一步测试
+            if (!in_array($server->connection_info($fd)['remote_ip'], $currentServerHosts)) {
+                throw new MethodException();
+            }
+            // 比较当前监听端口是否是该服务
+            if (!in_array($server->connection_info($fd)['server_port'], $currentServerPorts)) {
+                throw new MethodException();
+            }
+            /** @var Evaluator $rpcService */
+            $rpcService     = App::getInstance()->get($id);
+            $rpcServer      = new Server($rpcService);
+            $data['method'] = $method;
+            $reply          = $rpcServer->reply(Packer::pack($data));
+            $server->send($fd, $reply);
         } catch (\Exception $e) {
             $data = [
                 'jsonrpc' => Server::VERSION,
@@ -77,18 +79,5 @@ class RpcServer extends TcpServer
             ];
             $server->send($fd, Packer::pack($data));
         }
-    }
-
-    private static function getConfig($serverName)
-    {
-        $serverConfigs = App::getInstance()->config->get('topphpServer.servers');
-        foreach ($serverConfigs as $config) {
-            /** @var ServerConfig $config */
-            $config = App::getInstance()->make(ServerConfig::class, [$config], true);
-            if ($serverName === $config->getName()) {
-                return $config->getPort();
-            }
-        }
-        return false;
     }
 }

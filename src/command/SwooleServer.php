@@ -58,10 +58,11 @@ class SwooleServer extends Command
 
     private function initSwooleServer()
     {
-        $servers = $this->app->config->get('topphpServer.servers');
-        $servers = $this->sortServers($servers);
-        $mode    = $this->app->config->get('topphpServer.mode', SWOOLE_PROCESS);
-        $options = $this->app->config->get('topphpServer.options');
+        $servers     = $this->app->config->get('topphpServer.servers');
+        $servers     = $this->sortServers($servers);
+        $mode        = $this->app->config->get('topphpServer.mode', SWOOLE_PROCESS);
+        $options     = $this->app->config->get('topphpServer.options');
+        $bindServers = [];
         foreach ($servers as $server) {
             if (!$this->server instanceof Server) {
                 $serverClass = $server->getType();
@@ -82,18 +83,20 @@ class SwooleServer extends Command
                     port [{$server->getHost()}:{$server->getPort()}]");
                 }
             }
-            if (count($servers) === 1) {
-                $server->setOptions([
-                    'open_websocket_protocol' => false,
-                ]);
-            }
+//            if (count($servers) === 1) {
+//                $server->setOptions([
+//                    'open_websocket_protocol' => false,
+//                ]);
+//            }
             $option = array_replace($server->getOptions(), $options);
             $slaveServer->set($option);
             // 添加监听事件
             $this->setSwooleServerListeners($slaveServer, $server->getType());
-            // 这里容器拼接为了rpc服务判断获取端口用
-            $this->app->bind($server->getName() . ':' . $server->getPort(), $slaveServer);
+            // 把同名服务组成数组,方便客户端随机调用
+            $bindServers[$server->getName()][] = $slaveServer;
         }
+        $this->app->session->set('bindServers', $bindServers);
+
         // 添加基础监听
         $this->setDefaultSwooleServerListeners($this->server);
         if (env('APP_DEBUG')) {
