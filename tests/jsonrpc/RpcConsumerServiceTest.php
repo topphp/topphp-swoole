@@ -21,7 +21,7 @@ class RpcConsumerServiceTest extends HttpTestCase
             'film-server',
             'filmService',
             'test',
-            [2, 2]
+            [1, 3322]
         );
         var_dump($res);
     }

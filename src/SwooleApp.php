@@ -31,7 +31,6 @@ class SwooleApp extends App implements Evaluator
     }
 
     /**
-     * todo rpc-server
      * @inheritDoc
      * @throws MethodException
      */

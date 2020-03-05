@@ -28,20 +28,24 @@ class Service extends \think\Service
         // 遍历 app 目录,扫描注解
         /** @var Finder $finder */
         $finder = $this->app->make(Finder::class);
-        $finder->files()->in(app_path())->name(['*Service.php', '*.php']);
+        // todo 不知道为什么这里不能指定controller层文件,如果指定了不会进行热更新,所以暂时只指定Service后缀文件
+        $finder->files()->in(app_path())->name(['*Service.php']);
         $rpcService = [];
         if (!$finder->hasResults()) {
             return;
         }
         foreach ($finder as $file) {
+            var_dump($file->getFilename());
             if (!$file->getRelativePath()) {
                 continue;
             }
             $class = '/app/' . $file->getRelativePath() . '/' . $file->getFilenameWithoutExtension();
             $class = str_replace('/', '\\', $class);
-
-            /** @var ReflectionClass $ref */
-            $ref = $this->app->make(ReflectionClass::class, [$class]);
+            try {
+                $ref = new ReflectionClass($class);
+            } catch (\ReflectionException $e) {
+                continue;
+            }
             // 整理 rpc-server 到数组中
             /** @var AnnotationReader $reader */
             $reader = $this->app->make(AnnotationReader::class);

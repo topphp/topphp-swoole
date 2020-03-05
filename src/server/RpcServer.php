@@ -38,6 +38,7 @@ class RpcServer extends TcpServer
     private static function buildRpcRequest(SwooleServer $server, int $fd, int $reactorId, string $data)
     {
         try {
+            // todo 现在是单请求形式, 以后要改成多请求组成一个数组形式
             $data = Packer::unpack($data);
             [$serverName, $id, $method] = explode('@', $data['method']);
             $rpcServers = App::getInstance()->session->get('bindServers');

@@ -29,7 +29,6 @@ class RpcProviderService extends Service implements Evaluator
      * @param $method
      * @param $arguments
      * @return mixed
-     * @throws MethodException
      * @throws ReflectionException
      */
     public function evaluate($method, $arguments)
@@ -45,6 +44,6 @@ class RpcProviderService extends Service implements Evaluator
         if (in_array($method, $methods)) {
             return $this->$method(...$arguments);
         }
-        throw new MethodException();
+        throw new ReflectionException();
     }
 }
