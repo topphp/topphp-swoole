@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Topphp\TopphpSwoole\services;
 
+use Doctrine\Common\Annotations\AnnotationException;
 use ReflectionClass;
 use Symfony\Component\Finder\Finder;
 use Doctrine\Common\Annotations\AnnotationReader;
@@ -52,9 +53,11 @@ class Service extends \think\Service
             $rpcAnnotation = $reader->getClassAnnotation($ref, Rpc::class);
             if ($rpcAnnotation) {
                 //todo 判断当前是否 $rpcAnnotation->name 不在配置文件中
-
                 $this->app->bind($rpcAnnotation->serverName . '::' . $rpcAnnotation->serviceName, $ref->getName());
-//                $rpcService[$rpcAnnotation->name] = $ref->getName();
+                // 给rpc消费端获取服务注解参数用
+                $this->app->bind($ref->getName() . '@Annotation', function () use ($rpcAnnotation) {
+                    return $rpcAnnotation;
+                });
             }
         }
     }

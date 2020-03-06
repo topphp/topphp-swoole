@@ -13,7 +13,6 @@ use Exception;
 use Swoole\Server as SwooleServer;
 use think\facade\App;
 use Topphp\TopphpSwoole\server\jsonrpc\Evaluator;
-use Topphp\TopphpSwoole\server\jsonrpc\exceptions\MethodException;
 use Topphp\TopphpSwoole\server\jsonrpc\Packer;
 use Topphp\TopphpSwoole\server\jsonrpc\responses\ErrorResponse;
 use Topphp\TopphpSwoole\server\jsonrpc\Server;

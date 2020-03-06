@@ -2,36 +2,66 @@
 /**
  * 凯拓软件 [临渊羡鱼不如退而结网,凯拓与你一同成长]
  * @package topphp-swoole
- * @date 2020/3/4 16:17
+ * @date 2020/3/1 01:19
  * @author sleep <sleep@kaituocn.com>
  */
-declare(strict_types=1);
 
 namespace Topphp\TopphpSwoole\services;
 
 use ErrorException;
 use Exception;
-use Swoole\Server\Port;
 use think\facade\App;
+use Topphp\TopphpSwoole\annotation\Rpc;
 use Topphp\TopphpSwoole\server\jsonrpc\Client;
 use Topphp\TopphpSwoole\server\jsonrpc\responses\ErrorResponse;
 use Topphp\TopphpSwoole\server\jsonrpc\responses\ResultResponse;
 
-class RpcConsumerService
+class RpcConsumer
 {
-    /** @var Client $rpcClient */
-    protected $rpcClient;
+    /** @var Rpc $annotation */
+    private static $annotation;
 
-    public function request($requestId, $serverName, $serviceName, $method, $arguments)
+    /**
+     * @var static
+     */
+    private static $instance;
+
+    /**
+     * @param $class
+     * @return mixed
+     * @author sleep
+     */
+    public static function make($class)
     {
-        $this->rpcClient = App::getInstance()->make(Client::class);
-        $methodName      = $serverName . '@' . $serviceName . '@' . $method;
+        self::$annotation = App::make($class . '@Annotation');
+        if (!self::$instance) {
+            self::$instance = new static;
+        }
+        return self::$instance;
+    }
+
+    public function __call($name, $arguments)
+    {
+        return $this->__request(
+            uniqid($name . '_'),
+            self::$annotation->serverName,
+            self::$annotation->serviceName,
+            $name,
+            $arguments
+        );
+    }
+
+    protected function __request($requestId, $serverName, $serviceName, $method, $arguments)
+    {
+        /** @var Client $rpcClient */
+        $rpcClient  = App::make(Client::class);
+        $methodName = $serverName . '@' . $serviceName . '@' . $method;
         // todo 现在是单请求形式, 以后要改成多请求组成一个数组形式 query可以多次
-        $this->rpcClient->query($requestId, $methodName, $arguments);
-        $encode = $this->rpcClient->encode();
+        $rpcClient->query($requestId, $methodName, $arguments);
+        $encode = $rpcClient->encode();
         try {
             //  随机获取服务连接信息, 根据serverName查询服务地址.
-            $server = $this->getCurrentServer($serverName);
+            $server = $this->getCurrentConsumerNode($serverName);
             if (!$server) {
                 throw new ErrorException("is not have this server: {$serverName}");
             }
@@ -43,7 +73,7 @@ class RpcConsumerService
             if (!$recv) {
                 throw new ErrorException($client->errMsg);
             }
-            $responses = $this->rpcClient->decode($recv);
+            $responses = $rpcClient->decode($recv);
             $result    = [];
             foreach ($responses as $response) {
                 if ($response instanceof ResultResponse) {
@@ -72,12 +102,13 @@ class RpcConsumerService
     }
 
     /**
+     * 获取当前消费节点
      * @param $serverName
      * @return array|bool
      * @throws Exception
      * @author sleep
      */
-    private function getCurrentServer($serverName)
+    private function getCurrentConsumerNode($serverName)
     {
         $clients = App::getInstance()->config->get('topphpServer.clients');
         foreach ($clients as $client) {
@@ -89,7 +120,7 @@ class RpcConsumerService
                         $currentIndex = random_int(1, count($nodes));
                         break;
                     default:
-                        $currentIndex = 0;
+                        $currentIndex = 1;
                         break;
                 }
                 return [
