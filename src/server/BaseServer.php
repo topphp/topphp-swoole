@@ -22,6 +22,7 @@ class BaseServer
             SwooleEvent::ON_WORKER_START,
             SwooleEvent::ON_START,
             SwooleEvent::ON_TASK,
+            SwooleEvent::ON_FINISH,
             SwooleEvent::ON_PIPE_MESSAGE,
             SwooleEvent::ON_CLOSE,
         ];
@@ -70,7 +71,17 @@ class BaseServer
             'fromId' => $fromId,
             'data'   => $data
         ]);
-        $server->finish("$data -> OK");
+    }
+
+    public static function onFinish(SwooleServer $server, int $taskId, string $data)
+    {
+        App::getInstance()->event->trigger(TopServerEvent::ON_FINISH, [
+            'server' => $server,
+            'taskId' => $taskId,
+            'data'   => $data
+        ]);
+        echo "the [id=$taskId] task is finished\n";
+
     }
 
     public static function onPipeMessage(SwooleServer $server, $workerId, string $data): void

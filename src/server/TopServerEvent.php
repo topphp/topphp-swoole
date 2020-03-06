@@ -17,6 +17,7 @@ class TopServerEvent
 {
     // 全局
     const ON_TASK         = 'topphp.BaseServer.onTask';
+    const ON_FINISH       = 'topphp.BaseServer.onFinish';
     const ON_CLOSE        = 'topphp.BaseServer.onClose';
     const ON_PIPE_MESSAGE = 'topphp.BaseServer.onPipeMessage';
     const ON_WORKER_STOP  = 'topphp.BaseServer.onWorkerStop';
