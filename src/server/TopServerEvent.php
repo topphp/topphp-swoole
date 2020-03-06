@@ -20,6 +20,7 @@ class TopServerEvent
     const ON_FINISH       = 'topphp.BaseServer.onFinish';
     const ON_CLOSE        = 'topphp.BaseServer.onClose';
     const ON_PIPE_MESSAGE = 'topphp.BaseServer.onPipeMessage';
+    const ON_WORKER_START = 'topphp.BaseServer.onWorkerStart';
     const ON_WORKER_STOP  = 'topphp.BaseServer.onWorkerStop';
     const ON_WORKER_ERROR = 'topphp.BaseServer.onWorkerError';
     const ON_MANAGER_STOP = 'topphp.BaseServer.onManagerStop';

@@ -50,7 +50,15 @@ class BaseServer
     {
         self::clearCache();
         self::setProcessName($server->taskworker ? 'task process' : 'worker process');
-        echo "workerId: $workerId is working\n";
+        if ($server->taskworker) {
+            echo "TaskWorker:{$workerId} started.\n";
+        } else {
+            echo "workerId: $workerId is working\n";
+        }
+        App::getInstance()->event->trigger(TopServerEvent::ON_WORKER_START, [
+            'server'   => $server,
+            'workerId' => $workerId
+        ]);
     }
 
     public static function onStart(SwooleServer $server): void
@@ -81,7 +89,6 @@ class BaseServer
             'data'   => $data
         ]);
         echo "the [id=$taskId] task is finished\n";
-
     }
 
     public static function onPipeMessage(SwooleServer $server, $workerId, string $data): void
@@ -162,12 +169,8 @@ class BaseServer
     private static function create(int $masterPid, int $managerPid)
     {
         $file = config('topphpServer.options.pid_file');
-        if (!is_writable($file)
-            && !is_writable(dirname($file))
-        ) {
-            throw new RuntimeException(
-                sprintf('Pid file "%s" is not writable', $file)
-            );
+        if (!is_writable($file) && !is_writable(dirname($file))) {
+            throw new RuntimeException(sprintf('Pid file "%s" is not writable', $file));
         }
         file_put_contents($file, $masterPid . ',' . $managerPid);
     }
