@@ -11,24 +11,41 @@ namespace Topphp\TopphpSwoole\server\jsonrpc;
 
 class Packer
 {
-    protected $defaultOptions = [
-        'package_length_type' => 'N',
-        'package_body_offset' => 4,
-    ];
+//    protected static $defaultOptions = [
+//        'package_length_type' => 'N',
+//        'package_body_offset' => 4,
+//    ];
+//
+//    public function __construct()
+//    {
+//    }
+//
+//    public static function pack($data): string
+//    {
+//        $data = json_encode($data, JSON_UNESCAPED_UNICODE);
+//        return pack(self::$defaultOptions['package_length_type'], strlen($data)) . $data;
+//    }
+//
+//    public static function unpack(string $data)
+//    {
+//        $data = substr($data, self::$defaultOptions['package_body_offset']);
+//        return json_decode($data, true);
+//    }
 
-    public function __construct()
-    {
-    }
+    /**
+     * @var string
+     */
+    protected static $eof = "\r\n";
 
-    public function pack(string $data): string
+    public static function pack($data): string
     {
         $data = json_encode($data, JSON_UNESCAPED_UNICODE);
-        return pack($this->defaultOptions['package_length_type'], strlen($data)) . $data;
+
+        return $data . self::$eof;
     }
 
-    public function unpack(string $data)
+    public static function unpack(string $data)
     {
-        $data = substr($data, $this->defaultOptions['package_body_offset']);
         return json_decode($data, true);
     }
 }

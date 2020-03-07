@@ -9,22 +9,24 @@ declare(strict_types=1);
 
 namespace Topphp\TopphpSwoole\server;
 
+use Exception;
 use Swoole\Server as SwooleServer;
 use think\facade\App;
-use Topphp\TopphpSwoole\contract\SwooleServerInterface;
+use Topphp\TopphpSwoole\server\jsonrpc\Evaluator;
+use Topphp\TopphpSwoole\server\jsonrpc\Packer;
+use Topphp\TopphpSwoole\server\jsonrpc\responses\ErrorResponse;
 use Topphp\TopphpSwoole\server\jsonrpc\Server;
-use Topphp\TopphpSwoole\SwooleApp;
 
-class RpcServer extends TcpServer implements SwooleServerInterface
+class RpcServer extends TcpServer
 {
     public static function onConnect(SwooleServer $server, int $fd): void
     {
-        App::getInstance()->event->trigger('topphp.RpcServer.onConnect', ['server' => $server, 'fd' => $fd]);
+        App::getInstance()->event->trigger(TopServerEvent::ON_RPC_CONNECT, ['server' => $server, 'fd' => $fd]);
     }
 
     public static function onReceive(SwooleServer $server, int $fd, int $reactorId, string $data): void
     {
-        App::getInstance()->event->trigger('topphp.RpcServer.onReceive', [
+        App::getInstance()->event->trigger(TopServerEvent::ON_RPC_RECEIVE, [
             'server'    => $server,
             'fd'        => $fd,
             'reactorId' => $reactorId,
@@ -35,9 +37,26 @@ class RpcServer extends TcpServer implements SwooleServerInterface
 
     private static function buildRpcRequest(SwooleServer $server, int $fd, int $reactorId, string $data)
     {
-        $app       = new SwooleApp();
-        $rpcServer = new Server($app);
-        $reply     = $rpcServer->reply($data);
-        $server->send($fd, $reply);
+        try {
+            // todo 现在是单请求形式, 以后要改成多请求组成一个数组形式
+            $data = Packer::unpack($data);
+            [$serverName, $serviceName, $method] = explode('@', $data['method']);
+            /** @var Evaluator $rpcService */
+            $rpcService     = App::getInstance()->get($serverName . '::' . $serviceName);
+            $rpcServer      = new Server($rpcService);
+            $data['method'] = $method;
+            $reply          = $rpcServer->reply(Packer::pack($data));
+            $server->send($fd, $reply);
+        } catch (Exception $e) {
+            $data = [
+                'jsonrpc' => Server::VERSION,
+                'id'      => $fd,
+                'error'   => [
+                    'code'    => ErrorResponse::INTERNAL_ERROR,
+                    'message' => $e->getMessage()
+                ]
+            ];
+            $server->send($fd, Packer::pack($data));
+        }
     }
 }

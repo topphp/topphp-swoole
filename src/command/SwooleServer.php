@@ -11,7 +11,6 @@ namespace Topphp\TopphpSwoole\command;
 
 use Swoole\Coroutine;
 use Swoole\Process;
-use Swoole\Runtime;
 use Swoole\Server;
 use think\console\Command;
 use think\console\input\Argument;
@@ -19,9 +18,11 @@ use think\helper\Str;
 use Topphp\TopphpSwoole\FileWatcher;
 use Topphp\TopphpSwoole\server\BaseServer;
 use Topphp\TopphpSwoole\server\HttpServer;
+use Topphp\TopphpSwoole\server\RpcServer;
 use Topphp\TopphpSwoole\server\TcpServer;
 use Topphp\TopphpSwoole\server\WebSocketServer;
 use Topphp\TopphpSwoole\ServerConfig;
+use Topphp\TopphpSwoole\ServiceManager;
 use Topphp\TopphpSwoole\SwooleApp;
 
 class SwooleServer extends Command
@@ -44,6 +45,7 @@ class SwooleServer extends Command
         $action = $this->input->getArgument('action');
         switch ($action) {
             case 'start':
+                Coroutine::set(['hook_flags' => SWOOLE_HOOK_ALL]);//v4.4+版本使用此方法。
                 $this->app->bind(SwooleApp::class, $this->initSwooleServer());
                 break;
             default:
@@ -58,10 +60,11 @@ class SwooleServer extends Command
 
     private function initSwooleServer()
     {
-        $servers = $this->app->config->get('topphpServer.servers');
-        $servers = $this->sortServers($servers);
-        $mode    = $this->app->config->get('topphpServer.mode', SWOOLE_PROCESS);
-        $options = $this->app->config->get('topphpServer.options');
+        $services = [];
+        $servers  = $this->app->config->get('topphpServer.servers');
+        $servers  = $this->sortServers($servers);
+        $mode     = $this->app->config->get('topphpServer.mode', SWOOLE_PROCESS);
+        $options  = $this->app->config->get('topphpServer.options');
         foreach ($servers as $server) {
             if (!$this->server instanceof Server) {
                 $serverClass = $server->getType();
@@ -82,30 +85,33 @@ class SwooleServer extends Command
                     port [{$server->getHost()}:{$server->getPort()}]");
                 }
             }
-            if (count($servers) === 1) {
-                $server->setOptions([
-                    'open_websocket_protocol' => false,
-                ]);
-            }
             $option = array_replace($server->getOptions(), $options);
             $slaveServer->set($option);
             // 添加监听事件
             $this->setSwooleServerListeners($slaveServer, $server->getType());
-            $this->app->bind($server->getName(), $slaveServer);
+            if ($server->getType() === RpcServer::class) {
+                $services[$server->getName()][] = [
+                    'host' => $server->getHost(),
+                    'port' => $server->getPort()
+                ];
+            }
         }
+        // 把启动的服务加入到容器中,注册服务和消费服务时调用
+        $this->app->make(ServiceManager::class, [$services]);
+
         // 添加基础监听
-        $this->setDefaultSwooleServerListeners($this->server);
+        $this->setBaseServerListeners($this->server);
         if (env('APP_DEBUG')) {
             $this->hotUpdate();
         }
-        $this->startServer();
+        $this->server->start();
     }
 
     /**
      * @param Server $server
      * @author sleep
      */
-    private function setDefaultSwooleServerListeners($server)
+    private function setBaseServerListeners($server)
     {
         $baseEvents = BaseServer::getEvents();
         foreach ($baseEvents as $baseEvent) {
@@ -118,7 +124,7 @@ class SwooleServer extends Command
     /**
      * 遍历服务和事件获取监听
      * @param Server $server
-     * @param Server|HttpServer|WebSocketServer|TcpServer $class
+     * @param Server|HttpServer|RpcServer|WebSocketServer|TcpServer $class
      * @author sleep
      */
     private function setSwooleServerListeners($server, $class)
@@ -146,12 +152,6 @@ class SwooleServer extends Command
             });
         }, false, 0);
         $this->server->addProcess($process);
-    }
-
-    private function startServer()
-    {
-        Runtime::enableCoroutine(true);
-        $this->server->start();
     }
 
     /**

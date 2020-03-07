@@ -34,7 +34,7 @@ class FileWatcher
     public function watch(callable $callback)
     {
         $this->files = $this->findFiles();
-        Timer::tick(2000, function () use ($callback) {
+        Timer::tick(1000, function () use ($callback) {
             $files = $this->findFiles();
             foreach ($files as $path => $time) {
                 if (empty($this->files[$path]) || $this->files[$path] != $time) {

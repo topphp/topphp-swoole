@@ -22,6 +22,7 @@ class BaseServer
             SwooleEvent::ON_WORKER_START,
             SwooleEvent::ON_START,
             SwooleEvent::ON_TASK,
+            SwooleEvent::ON_FINISH,
             SwooleEvent::ON_PIPE_MESSAGE,
             SwooleEvent::ON_CLOSE,
         ];
@@ -49,31 +50,57 @@ class BaseServer
     {
         self::clearCache();
         self::setProcessName($server->taskworker ? 'task process' : 'worker process');
-        echo "workerId: $workerId is working\n";
+        if ($server->worker_id === 0) {
+            // 主进程启动
+            App::getInstance()->event->trigger(TopServerEvent::MAIN_WORKER_START, [
+                'server'   => $server,
+                'workerId' => $workerId
+            ]);
+        }
+        if ($server->taskworker) {
+            echo "TaskWorker:{$workerId} started.\n";
+        } else {
+            echo "workerId: $workerId is working\n";
+        }
+        App::getInstance()->event->trigger(TopServerEvent::ON_WORKER_START, [
+            'server'   => $server,
+            'workerId' => $workerId
+        ]);
     }
 
     public static function onStart(SwooleServer $server): void
     {
         self::setProcessName('master process');
         self::create($server->master_pid, $server->manager_pid ?? 0);
-        echo "server is started: {$server->host}:{$server->port}\n";
+        foreach ($server->ports as $port) {
+            echo "server is started: {$server->host}:{$port->port}\n";
+        }
     }
 
     public static function onTask(SwooleServer $server, $taskId, $fromId, string $data): void
     {
         echo "New AsyncTask[id=$taskId]\n";
-        App::getInstance()->event->trigger('topphp.BaseServer.onTask', [
+        App::getInstance()->event->trigger(TopServerEvent::ON_TASK, [
             'server' => $server,
             'taskId' => $taskId,
             'fromId' => $fromId,
             'data'   => $data
         ]);
-        $server->finish("$data -> OK");
+    }
+
+    public static function onFinish(SwooleServer $server, int $taskId, string $data)
+    {
+        App::getInstance()->event->trigger(TopServerEvent::ON_FINISH, [
+            'server' => $server,
+            'taskId' => $taskId,
+            'data'   => $data
+        ]);
+        echo "the [id=$taskId] task is finished\n";
     }
 
     public static function onPipeMessage(SwooleServer $server, $workerId, string $data): void
     {
-        App::getInstance()->event->trigger('topphp.BaseServer.onPipeMessage', [
+        App::getInstance()->event->trigger(TopServerEvent::ON_PIPE_MESSAGE, [
             'server'   => $server,
             'workerId' => $workerId,
             'data'     => $data
@@ -83,12 +110,14 @@ class BaseServer
 
     public static function onClose(SwooleServer $server, int $fd, int $reactorId): void
     {
-        App::getInstance()->event->trigger('topphp.BaseServer.onClose', [
+        App::getInstance()->event->trigger(TopServerEvent::ON_CLOSE, [
             'server'    => $server,
             'fd'        => $fd,
             'reactorId' => $reactorId
         ]);
-        echo "closed $fd\n";
+        if ($server instanceof WebSocketServer) {
+            echo "closed $fd\n";
+        }
     }
 
     /**
@@ -100,7 +129,7 @@ class BaseServer
      */
     public static function onWorkerStop(SwooleServer $server, int $workerId): void
     {
-        App::getInstance()->event->trigger('topphp.BaseServer.onWorkerStop', [
+        App::getInstance()->event->trigger(TopServerEvent::ON_WORKER_STOP, [
             'server'   => $server,
             'workerId' => $workerId
         ]);
@@ -123,7 +152,7 @@ class BaseServer
         int $exitCode,
         int $signal
     ): void {
-        App::getInstance()->event->trigger('topphp.BaseServer.onWorkerError', [
+        App::getInstance()->event->trigger(TopServerEvent::ON_WORKER_ERROR, [
             'server'    => $server,
             'workerId'  => $workerId,
             'workerPid' => $workerPid,
@@ -141,7 +170,7 @@ class BaseServer
     public static function onManagerStop(SwooleServer $server): void
     {
         // todo onManagerStop触发时，说明Task和Worker进程已结束运行，已被Manager进程回收。
-        App::getInstance()->event->trigger('topphp.BaseServer.onWorkerError', [
+        App::getInstance()->event->trigger(TopServerEvent::ON_MANAGER_STOP, [
             'server' => $server
         ]);
     }
@@ -149,12 +178,8 @@ class BaseServer
     private static function create(int $masterPid, int $managerPid)
     {
         $file = config('topphpServer.options.pid_file');
-        if (!is_writable($file)
-            && !is_writable(dirname($file))
-        ) {
-            throw new RuntimeException(
-                sprintf('Pid file "%s" is not writable', $file)
-            );
+        if (!is_writable($file) && !is_writable(dirname($file))) {
+            throw new RuntimeException(sprintf('Pid file "%s" is not writable', $file));
         }
         file_put_contents($file, $masterPid . ',' . $managerPid);
     }

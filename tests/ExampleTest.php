@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 namespace Topphp\Test;
 
-use Topphp\TopphpTesting\TestCase;
+use Topphp\TopphpTesting\HttpTestCase;
 
-class ExampleTest extends TestCase
+class ExampleTest extends HttpTestCase
 {
-    public function testRpcServerReturnData()
+    public function testIndex()
     {
     }
 }

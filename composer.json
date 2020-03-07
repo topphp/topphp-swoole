@@ -20,8 +20,11 @@
         "php": "~7.2",
         "ext-json": "*",
         "ext-swoole": ">=4.4.6",
+        "doctrine/reflection": "^1.1",
         "symfony/finder": "^5.0",
-        "topthink/framework": "^6.0.2"
+        "topphp/topphp-consul": "dev-master",
+        "topthink/framework": "^6.0.2",
+        "topthink/think-annotation": "*"
     },
     "require-dev": {
         "symfony/var-dumper": "^5.0",
@@ -54,7 +57,8 @@
         },
         "think": {
             "services": [
-                "Topphp\\TopphpSwoole\\services\\Service"
+                "Topphp\\TopphpSwoole\\services\\Service",
+                "Topphp\\TopphpSwoole\\services\\RpcProviderService"
             ],
             "config": {
                 "topphpServer": "config/topphpServer.php"
@@ -68,6 +72,10 @@
         "packagist": {
             "type": "composer",
             "url": "https://mirrors.aliyun.com/composer"
+        },
+        "topphp": {
+            "type": "path",
+            "url": "../../topphp/*"
         }
     }
 }

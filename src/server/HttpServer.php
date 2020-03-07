@@ -106,7 +106,7 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
         } catch (Throwable $e) {
             $response = $app->make(Handle::class)->render($request, $e);
         }
-        $app->event->trigger('topphp.HttpServer.onRequest', [
+        $app->event->trigger(TopServerEvent::ON_REQUEST, [
             'request'        => $request,
             'response'       => $response,
             'swooleRequest'  => $req,
@@ -115,7 +115,7 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
         self::sendResponse($res, $response, $app->cookie);
     }
 
-    protected static function handleRequest(Http $http, \think\Request $request)
+    protected static function handleRequest(Http $http, \think\Request $request): \think\Response
     {
         $level = ob_get_level();
         ob_start();
@@ -134,7 +134,7 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
         return $response;
     }
 
-    private static function makeFile(Request $request)
+    private static function makeFile(Request $request): array
     {
         $files = [];
         if (isset($request->files)) {
@@ -193,7 +193,7 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
      * @param Cookie $cookie
      * @author sleep
      */
-    private static function sendResponse(Response $res, \think\Response $response, Cookie $cookie)
+    private static function sendResponse(Response $res, \think\Response $response, Cookie $cookie): void
     {
         // 设置header
         foreach ($response->getHeader() as $key => $val) {
@@ -228,7 +228,7 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
      * @param $content
      * @author sleep
      */
-    private static function sendByChunk(Response $res, $content)
+    private static function sendByChunk(Response $res, $content): void
     {
         $chunkSize = 8192;
         if (strlen($content) <= $chunkSize) {
