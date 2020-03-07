@@ -21,7 +21,8 @@
         "ext-json": "*",
         "ext-swoole": ">=4.4.6",
         "doctrine/reflection": "^1.1",
-        "symfony/finder": "^4.0",
+        "symfony/finder": "^5.0",
+        "topphp/topphp-consul": "dev-master",
         "topthink/framework": "^6.0.2",
         "topthink/think-annotation": "*"
     },
@@ -71,6 +72,10 @@
         "packagist": {
             "type": "composer",
             "url": "https://mirrors.aliyun.com/composer"
+        },
+        "topphp": {
+            "type": "path",
+            "url": "../../topphp/*"
         }
     }
 }

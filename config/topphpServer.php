@@ -76,7 +76,11 @@ return [
                 ['host' => '0.0.0.0', 'port' => 9502],
                 ['host' => '127.0.0.1', 'port' => 9503]
             ],
-            'options' => []
+            'publish'  => [
+                'name'    => 'consul',
+                'address' => '127.0.0.1:8500'
+            ],
+            'options'  => []
         ],
         [
             'name'     => 'cinema-server',
@@ -85,7 +89,11 @@ return [
                 ['host' => '192.168.31.108', 'port' => 9502],
                 ['host' => '127.0.0.1', 'port' => 9503]
             ],
-            'options' => []
+            'publish'  => [
+                'name'    => 'consul',
+                'address' => '127.0.0.1:8500'
+            ],
+            'options'  => []
         ]
     ],
 ];

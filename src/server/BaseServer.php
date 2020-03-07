@@ -50,6 +50,13 @@ class BaseServer
     {
         self::clearCache();
         self::setProcessName($server->taskworker ? 'task process' : 'worker process');
+        if ($server->worker_id === 0) {
+            // 主进程启动
+            App::getInstance()->event->trigger(TopServerEvent::MAIN_WORKER_START, [
+                'server'   => $server,
+                'workerId' => $workerId
+            ]);
+        }
         if ($server->taskworker) {
             echo "TaskWorker:{$workerId} started.\n";
         } else {
@@ -108,7 +115,9 @@ class BaseServer
             'fd'        => $fd,
             'reactorId' => $reactorId
         ]);
-        echo "closed $fd\n";
+        if ($server instanceof WebSocketServer) {
+            echo "closed $fd\n";
+        }
     }
 
     /**

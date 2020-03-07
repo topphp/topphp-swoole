@@ -8,8 +8,11 @@
 
 namespace Topphp\TopphpSwoole\services;
 
+use Doctrine\Common\Annotations\AnnotationReader;
 use ErrorException;
 use Exception;
+use ReflectionClass;
+use ReflectionException;
 use think\facade\App;
 use Topphp\TopphpSwoole\annotation\Rpc;
 use Topphp\TopphpSwoole\server\jsonrpc\Client;
@@ -33,11 +36,18 @@ class RpcConsumer
      */
     public static function make($class)
     {
-        self::$annotation = App::make($class . '@Annotation');
-        if (!self::$instance) {
-            self::$instance = new static;
+        try {
+            $reader           = App::make(AnnotationReader::class);
+            $reflectionClass  = new ReflectionClass($class);
+            $rpcAnnotation    = $reader->getClassAnnotation($reflectionClass, Rpc::class);
+            self::$annotation = $rpcAnnotation;
+            if (!self::$instance) {
+                self::$instance = new static;
+            }
+            return self::$instance;
+        } catch (\Exception $e) {
+            return $e->getMessage();
         }
-        return self::$instance;
     }
 
     public function __call($name, $arguments)
@@ -113,21 +123,22 @@ class RpcConsumer
         $clients = App::getInstance()->config->get('topphpServer.clients');
         foreach ($clients as $client) {
             if ($client['name'] === $serverName) {
-                $nodes = $client['nodes'];
+                // todo 获取consul节点信息.不走本地
+
                 switch ($client['balancer']) {
                     case 'random':
                         // 随机
+                        $nodes        = $client['nodes'];
                         $currentIndex = random_int(1, count($nodes));
+                        return [
+                            'host'    => $nodes[$currentIndex - 1]['host'],
+                            'port'    => $nodes[$currentIndex - 1]['port'],
+                            'options' => $client['options'],
+                        ];
                         break;
                     default:
-                        $currentIndex = 1;
                         break;
                 }
-                return [
-                    'host'    => $nodes[$currentIndex - 1]['host'],
-                    'port'    => $nodes[$currentIndex - 1]['port'],
-                    'options' => $client['options'],
-                ];
             }
         }
         return false;
