@@ -36,8 +36,7 @@ class Service extends \think\Service
             // 遍历 app 目录,扫描注解
             /** @var Finder $finder */
             $finder = $this->app->make(Finder::class);
-            // todo 不知道为什么这里不能指定controller层文件,如果指定了不会进行热更新,所以暂时只指定Service后缀文件
-            $finder->files()->in(app_path())->name(['*Service.php']);
+            $finder->files()->in(app_path())->name(['*.php']);
             if (!$finder->hasResults()) {
                 return;
             }
