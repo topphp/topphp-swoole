@@ -29,9 +29,11 @@ class Service extends \think\Service
      */
     private $registeredService;
 
-    /**
-     * @author sleep
-     */
+    public function boot()
+    {
+        $this->commands([SwooleServer::class]);
+    }
+
     public function register()
     {
         $this->app->event->listen(TopServerEvent::MAIN_WORKER_START, function ($event) {
@@ -93,9 +95,17 @@ class Service extends \think\Service
         });
     }
 
+    /**
+     * 服务注册
+     * @param $serviceName
+     * @param $address
+     * @param $port
+     * @param $protocol
+     * @author sleep
+     */
     private function publishToConsul($serviceName, $address, $port, $protocol)
     {
-        if ($this->isRegister($serviceName, $address, $port, $protocol)) {
+        if ($this->serviceIsRegistered($serviceName, $address, $port, $protocol)) {
             var_dump("{$serviceName} {$address}:{$port} has been already registered to the consul.");
             return;
         }
@@ -111,6 +121,11 @@ class Service extends \think\Service
             ],
         ];
         if ($protocol === 'jsonrpc') {
+            /**
+             * todo  做成可配参数 DeregisterCriticalServiceAfter,Interval
+             * DeregisterCriticalServiceAfter 异常服务自动取消注册时间
+             * Interval 健康检查时间间隔
+             */
             $requestBody['Check'] = [
                 'DeregisterCriticalServiceAfter' => '10m',
                 'TCP'                            => "{$address}:{$port}",
@@ -162,6 +177,11 @@ class Service extends \think\Service
         return $lastService['ID'] ?? $name;
     }
 
+    /**
+     * 获取内网ip
+     * @return string
+     * @author sleep
+     */
     private function getInternalIp(): string
     {
         $ips = swoole_get_local_ip();
@@ -175,12 +195,7 @@ class Service extends \think\Service
         throw new \RuntimeException('Can not get the internal IP.');
     }
 
-    public function boot()
-    {
-        $this->commands([SwooleServer::class]);
-    }
-
-    private function isRegister($serviceName, $address, $port, $protocol)
+    private function serviceIsRegistered($serviceName, $address, $port, $protocol)
     {
         if (isset($this->registeredService[$serviceName][$protocol][$address][$port])) {
             return true;

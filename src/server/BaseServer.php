@@ -169,7 +169,7 @@ class BaseServer
      */
     public static function onManagerStop(SwooleServer $server): void
     {
-        // todo onManagerStop触发时，说明Task和Worker进程已结束运行，已被Manager进程回收。
+        // onManagerStop触发时，说明Task和Worker进程已结束运行，已被Manager进程回收。
         App::getInstance()->event->trigger(TopServerEvent::ON_MANAGER_STOP, [
             'server' => $server
         ]);
