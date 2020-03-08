@@ -22,8 +22,12 @@ use Topphp\TopphpSwoole\ServiceManager;
 
 class Service extends \think\Service
 {
-    /** @var Agent $agent */
+    /** @var Agent */
     private $agent;
+    /**
+     * @var array
+     */
+    private $registeredService;
 
     /**
      * @author sleep
@@ -73,6 +77,9 @@ class Service extends \think\Service
                     foreach ($services as $service) {
                         // 判断当前是否 $rpcAnnotation->name 在配置文件中
                         if ($rpcAnnotation->serverName === $name) {
+                            if (in_array($service['host'], ['0.0.0.0', 'localhost'])) {
+                                $service['host'] = $this->getInternalIp();
+                            }
                             $this->publishToConsul(
                                 $rpcAnnotation->serviceName,
                                 $service['host'],
@@ -88,11 +95,12 @@ class Service extends \think\Service
 
     private function publishToConsul($serviceName, $address, $port, $protocol)
     {
-        $lastId = $this->getLastServiceId($serviceName);
-        $id     = $this->generateId($lastId);
-        if (in_array($address, ['0.0.0.0', 'localhost'])) {
-            $address = $this->getInternalIp();
+        if ($this->isRegister($serviceName, $address, $port, $protocol)) {
+            var_dump("{$serviceName} {$address}:{$port} has been already registered to the consul.");
+            return;
         }
+        $lastId      = $this->getLastServiceId($serviceName);
+        $id          = $this->generateId($lastId);
         $requestBody = [
             'Name'    => $serviceName,
             'ID'      => $id,
@@ -104,9 +112,9 @@ class Service extends \think\Service
         ];
         if ($protocol === 'jsonrpc') {
             $requestBody['Check'] = [
-                'DeregisterCriticalServiceAfter' => '90m',
+                'DeregisterCriticalServiceAfter' => '10m',
                 'TCP'                            => "{$address}:{$port}",
-                'Interval'                       => '1s',
+                'Interval'                       => '5s',
             ];
         }
         if ($protocol === 'http-jsonrpc') {
@@ -114,6 +122,7 @@ class Service extends \think\Service
         }
         $response = $this->agent->registerService($requestBody);
         if ($response->getStatusCode() === 200) {
+            $this->registeredService[$serviceName][$protocol][$address][$port] = true;
             var_dump("{$id} {$address}:{$port} register to the consul successfully.");
         } else {
             throw new \RuntimeException($response->getBody());
@@ -169,5 +178,37 @@ class Service extends \think\Service
     public function boot()
     {
         $this->commands([SwooleServer::class]);
+    }
+
+    private function isRegister($serviceName, $address, $port, $protocol)
+    {
+        if (isset($this->registeredService[$serviceName][$protocol][$address][$port])) {
+            return true;
+        }
+
+        $response = $this->agent->services();
+        if ($response->getStatusCode() !== 200) {
+            var_dump("{$serviceName}#{$address}:{$port}register to the consul failed.");
+            return false;
+        }
+        $tag      = implode(',', [$serviceName, $address, $port, $protocol]);
+        $services = $response->json();
+        foreach ($services as $serviceId => $service) {
+            if (!isset($service['Service'], $service['Address'], $service['Port'], $service['Meta']['Protocol'])) {
+                continue;
+            }
+            $currentTag = implode(',', [
+                $service['Service'],
+                $service['Address'],
+                $service['Port'],
+                $service['Meta']['Protocol'],
+            ]);
+
+            if ($currentTag === $tag) {
+                $this->registeredService[$serviceName][$protocol][$address][$port] = true;
+                return true;
+            }
+        }
+        return false;
     }
 }
