@@ -76,7 +76,14 @@ return [
                 ['host' => '0.0.0.0', 'port' => 9503, 'weight' => 0],
                 ['host' => '127.0.0.1', 'port' => 9503, 'weight' => 0]
             ],
-            'options'  => []
+            'options'  => [],
+            'pool'     => [
+                'min_connections' => 1,
+                'max_connections' => 100,
+                'wait_timeout'    => 10,
+                'connect_timeout' => 10,
+                'max_idle_time'   => 60.0
+            ]
         ],
         [
             'name'     => 'cinema-server',
@@ -85,7 +92,14 @@ return [
                 ['host' => '192.168.31.108', 'port' => 9503, 'weight' => 0],
                 ['host' => '127.0.0.1', 'port' => 9503, 'weight' => 0]
             ],
-            'options'  => []
+            'options'  => [],
+            'pool'     => [
+                'min_connections' => 1,
+                'max_connections' => 100,
+                'wait_timeout'    => 10,
+                'connect_timeout' => 10,
+                'max_idle_time'   => 60.0
+            ]
         ]
     ],
 ];

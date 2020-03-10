@@ -13,10 +13,16 @@ use Doctrine\Common\Annotations\AnnotationReader;
 use ErrorException;
 use Exception;
 use ReflectionClass;
+use Swoole\Coroutine;
 use think\facade\App;
 use Topphp\TopphpConsul\consul\Agent;
 use Topphp\TopphpConsul\consul\Health;
+use Topphp\TopphpPool\BasePool;
 use Topphp\TopphpSwoole\annotation\Rpc;
+use Topphp\TopphpSwoole\coroutine\Context;
+use Topphp\TopphpSwoole\pool\RpcConnection;
+use Topphp\TopphpSwoole\pool\RpcPool;
+use Topphp\TopphpSwoole\pool\RpcPoolFactory;
 use Topphp\TopphpSwoole\server\jsonrpc\Client;
 use Topphp\TopphpSwoole\server\jsonrpc\responses\ErrorResponse;
 use Topphp\TopphpSwoole\server\jsonrpc\responses\ResultResponse;
@@ -37,6 +43,10 @@ class RpcConsumer
      * @var Health
      */
     private $health;
+    /**
+     * @var RpcPoolFactory
+     */
+    private $factory;
 
     /**
      * @param $class
@@ -75,8 +85,38 @@ class RpcConsumer
         );
     }
 
+    private function getConnection(): RpcConnection
+    {
+        $class = spl_object_hash($this) . '_Connection';
+        if (Context::has($class)) {
+            return Context::get($class);
+        }
+        $connection = $this->getRpcPool()->getInstance();
+        Coroutine::defer(function () use ($connection) {
+            $connection->release();;
+        });
+        return Context::set($class, $connection->getConnection());
+    }
+
+    private function getRpcPool(): BasePool
+    {
+        $name          = spl_object_hash($this) . '.Pool';
+        $config        = [
+            'connect_timeout' => 10,
+            'node'            => [
+                'host' => $this->node['host'],
+                'port' => $this->node['port']
+            ],
+            'options'         => $this->node['options']
+        ];
+        $this->factory = App::make(RpcPoolFactory::class);
+        return $this->factory->getPool($name, $config);
+    }
+
+
     private function getClient($encode)
     {
+        /** @var \Swoole\Coroutine\Client $client */
         $client = new \Swoole\Coroutine\Client(SWOOLE_SOCK_TCP);
         $client->set($this->node['options']);
         $client->connect($this->node['host'], $this->node['port']);
@@ -92,9 +132,13 @@ class RpcConsumer
         $rpcClient->query($requestId, $methodName, $arguments);
         $encode = $rpcClient->encode();
         try {
-            // todo 这里不知道为什么用 $this->client 返回结果一次成功一次失败.
+            /** @var \Swoole\Coroutine\Client $client */
             $client = $this->getClient($encode);
-            $recv   = $client->recv();
+
+            // todo 连接池返回的fd无法对应,没有解决
+//            $client = $this->getConnection();
+//            $client->send($encode);
+            $recv = $client->recv();
             if (!$recv) {
                 throw new ErrorException($client->errMsg);
             }

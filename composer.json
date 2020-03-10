@@ -23,6 +23,7 @@
         "doctrine/reflection": "^1.1",
         "symfony/finder": "^5.0",
         "topphp/topphp-consul": "dev-master",
+        "topphp/topphp-pool": "dev-master",
         "topphp/topphp-log": "^1.0",
         "topthink/framework": "^6.0.2",
         "topthink/think-annotation": "*"
@@ -50,6 +51,7 @@
         "test": "./vendor/bin/co-phpunit -c ./phpunit.xml.dist",
         "check-style": "phpcs src tests",
         "fix-style": "phpcbf src tests",
+        "fix": "composer check-style && composer fix-style",
         "post-root-package-install": []
     },
     "extra": {

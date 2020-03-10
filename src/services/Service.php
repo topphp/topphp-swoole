@@ -65,8 +65,10 @@ class Service extends \think\Service
                 if (!$rpcAnnotation) {
                     continue;
                 }
-                $this->app->bind($rpcAnnotation->serverName . '::' . $rpcAnnotation->serviceName,
-                    $reflectionClass->getName());
+                $this->app->bind(
+                    $rpcAnnotation->serverName . '::' . $rpcAnnotation->serviceName,
+                    $reflectionClass->getName()
+                );
 
                 //  consul服务注册
                 if (!$rpcAnnotation->publish === 'consul') {
