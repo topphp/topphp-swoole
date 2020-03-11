@@ -34,7 +34,7 @@ return [
         ],
         [
             'type'      => RpcServer::class,
-            'name'      => 'film-server',
+            'name'      => 'cinema-server',
             'host'      => '0.0.0.0',                       // 监听地址
             'port'      => 9503,                            // 监听端口
             'sock_type' => SWOOLE_SOCK_TCP,
@@ -73,8 +73,8 @@ return [
             'name'     => 'film-server',
             'balancer' => 'random',
             'nodes'    => [
-                ['host' => '0.0.0.0', 'port' => 9503, 'weight' => 0],
-                ['host' => '127.0.0.1', 'port' => 9503, 'weight' => 0]
+                ['host' => '0.0.0.0', 'port' => 9502, 'weight' => 0],
+                ['host' => '127.0.0.1', 'port' => 9502, 'weight' => 0]
             ],
             'options'  => [],
             'pool'     => [

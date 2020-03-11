@@ -71,7 +71,7 @@ class Service extends \think\Service
                 );
 
                 //  consul服务注册
-                if (!$rpcAnnotation->publish === 'consul') {
+                if ($rpcAnnotation->publish !== 'consul') {
                     continue;
                 }
                 $this->agent = App::make(Agent::class);

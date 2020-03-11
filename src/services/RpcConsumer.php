@@ -9,20 +9,15 @@ declare(strict_types=1);
 
 namespace Topphp\TopphpSwoole\services;
 
-use Doctrine\Common\Annotations\AnnotationReader;
-use ErrorException;
 use Exception;
+use ErrorException;
+use Doctrine\Common\Annotations\AnnotationReader;
 use ReflectionClass;
-use Swoole\Coroutine;
 use think\facade\App;
-use Topphp\TopphpConsul\consul\Agent;
 use Topphp\TopphpConsul\consul\Health;
-use Topphp\TopphpPool\BasePool;
+use Topphp\TopphpPool\rpc\RpcConfig;
+use Topphp\TopphpPool\rpc\RpcPool;
 use Topphp\TopphpSwoole\annotation\Rpc;
-use Topphp\TopphpSwoole\coroutine\Context;
-use Topphp\TopphpSwoole\pool\RpcConnection;
-use Topphp\TopphpSwoole\pool\RpcPool;
-use Topphp\TopphpSwoole\pool\RpcPoolFactory;
 use Topphp\TopphpSwoole\server\jsonrpc\Client;
 use Topphp\TopphpSwoole\server\jsonrpc\responses\ErrorResponse;
 use Topphp\TopphpSwoole\server\jsonrpc\responses\ResultResponse;
@@ -37,16 +32,20 @@ class RpcConsumer
      */
     private static $instance;
 
+    /**
+     * @var array 服务器节点
+     */
     private $node;
 
     /**
      * @var Health
      */
     private $health;
+
     /**
-     * @var RpcPoolFactory
+     * @var RpcConfig
      */
-    private $factory;
+    protected $rpcConfig;
 
     /**
      * @param $class
@@ -85,43 +84,17 @@ class RpcConsumer
         );
     }
 
-    private function getConnection(): RpcConnection
+    protected function getConnection($encode)
     {
-        $class = spl_object_hash($this) . '_Connection';
-        if (Context::has($class)) {
-            return Context::get($class);
-        }
-        $connection = $this->getRpcPool()->getInstance();
-        Coroutine::defer(function () use ($connection) {
-            $connection->release();;
-        });
-        return Context::set($class, $connection->getConnection());
-    }
-
-    private function getRpcPool(): BasePool
-    {
-        $name          = spl_object_hash($this) . '.Pool';
-        $config        = [
-            'connect_timeout' => 10,
-            'node'            => [
-                'host' => $this->node['host'],
-                'port' => $this->node['port']
-            ],
-            'options'         => $this->node['options']
-        ];
-        $this->factory = App::make(RpcPoolFactory::class);
-        return $this->factory->getPool($name, $config);
-    }
-
-
-    private function getClient($encode)
-    {
-        /** @var \Swoole\Coroutine\Client $client */
-        $client = new \Swoole\Coroutine\Client(SWOOLE_SOCK_TCP);
-        $client->set($this->node['options']);
-        $client->connect($this->node['host'], $this->node['port']);
+        /** @var RpcPool $pool */
+        $pool   = App::make(RpcPool::class, [
+            $this->rpcConfig,
+            $this->rpcConfig->getMaxConnections()
+        ]);
+        $client = $pool->get();
         $client->send($encode);
-        return $client;
+        $recv = $client->recv($this->rpcConfig->getWaitTimeout());
+        return [$client, $recv];
     }
 
     private function __request($requestId, $methodName, $arguments)
@@ -132,13 +105,7 @@ class RpcConsumer
         $rpcClient->query($requestId, $methodName, $arguments);
         $encode = $rpcClient->encode();
         try {
-            /** @var \Swoole\Coroutine\Client $client */
-            $client = $this->getClient($encode);
-
-            // todo 连接池返回的fd无法对应,没有解决
-//            $client = $this->getConnection();
-//            $client->send($encode);
-            $recv = $client->recv();
+            [$client, $recv] = $this->getConnection($encode);
             if (!$recv) {
                 throw new ErrorException($client->errMsg);
             }
@@ -170,6 +137,23 @@ class RpcConsumer
         }
     }
 
+    private function initConfig($config)
+    {
+        /** @var RpcConfig $rpcConfig */
+        $rpcConfig = App::make(RpcConfig::class, []);
+        if (isset($config) && !empty($config)) {
+            $rpcConfig
+                ->setNode($this->node)
+                ->setOptions($config['options'])
+                ->setMinConnections($config['pool']['min_connections'])
+                ->setMaxConnections($config['pool']['max_connections'])
+                ->setConnectTimeout($config['pool']['connect_timeout'])
+                ->setMaxIdleTime($config['pool']['max_idle_time'])
+                ->setWaitTimeout($config['pool']['wait_timeout']);
+        }
+        return $rpcConfig;
+    }
+
     /**
      * 获取当前消费节点
      * @param Rpc $service
@@ -192,12 +176,13 @@ class RpcConsumer
                 switch ($client['balancer']) {
                     case 'random':
                         // 随机模式
-                        $currentIndex = random_int(1, count($nodes));
-                        return [
-                            'host'    => $nodes[$currentIndex - 1]['host'],
-                            'port'    => $nodes[$currentIndex - 1]['port'],
-                            'options' => $client['options'],
+                        $currentIndex    = random_int(1, count($nodes));
+                        $this->node      = [
+                            'host' => $nodes[$currentIndex - 1]['host'],
+                            'port' => $nodes[$currentIndex - 1]['port'],
                         ];
+                        $this->rpcConfig = $this->initConfig($client);
+                        return $this->node;
                         break;
                     default:
                         return [];
