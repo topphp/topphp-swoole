@@ -13,11 +13,13 @@ use Exception;
 use ErrorException;
 use Doctrine\Common\Annotations\AnnotationReader;
 use ReflectionClass;
+use Swoole\Coroutine;
 use think\facade\App;
 use Topphp\TopphpConsul\consul\Health;
 use Topphp\TopphpPool\rpc\RpcConfig;
 use Topphp\TopphpPool\rpc\RpcPool;
 use Topphp\TopphpSwoole\annotation\Rpc;
+use Topphp\TopphpSwoole\coroutine\Context;
 use Topphp\TopphpSwoole\server\jsonrpc\Client;
 use Topphp\TopphpSwoole\server\jsonrpc\responses\ErrorResponse;
 use Topphp\TopphpSwoole\server\jsonrpc\responses\ResultResponse;
@@ -86,6 +88,10 @@ class RpcConsumer
 
     protected function getConnection($encode)
     {
+        $class = spl_object_hash($this) . '.Connection';
+        if (Context::has($class)) {
+            return Context::get($class);
+        }
         /** @var RpcPool $pool */
         $pool   = App::make(RpcPool::class, [
             $this->rpcConfig,
@@ -93,8 +99,10 @@ class RpcConsumer
         ]);
         $client = $pool->get();
         $client->send($encode);
-        $recv = $client->recv($this->rpcConfig->getWaitTimeout());
-        return [$client, $recv];
+        Coroutine::defer(function () use ($pool, $client) {
+            $pool->put($client);
+        });
+        return Context::set($class, $client);
     }
 
     private function __request($requestId, $methodName, $arguments)
@@ -105,7 +113,9 @@ class RpcConsumer
         $rpcClient->query($requestId, $methodName, $arguments);
         $encode = $rpcClient->encode();
         try {
-            [$client, $recv] = $this->getConnection($encode);
+            $client = $this->getConnection($encode);
+            $recv   = $client->recv($this->rpcConfig->getWaitTimeout());
+
             if (!$recv) {
                 throw new ErrorException($client->errMsg);
             }
