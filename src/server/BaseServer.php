@@ -12,6 +12,7 @@ namespace Topphp\TopphpSwoole\server;
 use RuntimeException;
 use Swoole\Server as SwooleServer;
 use think\facade\App;
+use Topphp\TopphpLog\Log;
 use Topphp\TopphpSwoole\SwooleEvent;
 
 class BaseServer
@@ -36,7 +37,7 @@ class BaseServer
     public static function onManagerStart(SwooleServer $server): void
     {
         self::setProcessName('manager process ' . $server->manager_pid);
-        echo 'onManagerStart' . PHP_EOL;
+        Log::debug('onManagerStart#' . $server->manager_pid);
     }
 
     /**
@@ -48,19 +49,18 @@ class BaseServer
      */
     public static function onWorkerStart(SwooleServer $server, int $workerId): void
     {
+        if ($server->taskworker) {
+            Log::debug("TaskWorker:{$workerId} started.");
+        }
         self::clearCache();
         self::setProcessName($server->taskworker ? 'task process' : 'worker process');
         if ($server->worker_id === 0) {
+            self::initConsole($server);
             // 主进程启动
             App::getInstance()->event->trigger(TopServerEvent::MAIN_WORKER_START, [
                 'server'   => $server,
                 'workerId' => $workerId
             ]);
-        }
-        if ($server->taskworker) {
-            echo "TaskWorker:{$workerId} started.\n";
-        } else {
-            echo "workerId: $workerId is working\n";
         }
         App::getInstance()->event->trigger(TopServerEvent::ON_WORKER_START, [
             'server'   => $server,
@@ -72,20 +72,17 @@ class BaseServer
     {
         self::setProcessName('master process');
         self::create($server->master_pid, $server->manager_pid ?? 0);
-        foreach ($server->ports as $port) {
-            echo "server is started: {$server->host}:{$port->port}\n";
-        }
     }
 
     public static function onTask(SwooleServer $server, $taskId, $fromId, string $data): void
     {
-        echo "New AsyncTask[id=$taskId]\n";
         App::getInstance()->event->trigger(TopServerEvent::ON_TASK, [
             'server' => $server,
             'taskId' => $taskId,
             'fromId' => $fromId,
             'data'   => $data
         ]);
+        Log::debug("New AsyncTask[id=$taskId,fromId={$fromId}], data: {$data}");
     }
 
     public static function onFinish(SwooleServer $server, int $taskId, string $data)
@@ -95,7 +92,7 @@ class BaseServer
             'taskId' => $taskId,
             'data'   => $data
         ]);
-        echo "the [id=$taskId] task is finished\n";
+        Log::debug("the [id={$taskId}] task is finished, data: {$data}");
     }
 
     public static function onPipeMessage(SwooleServer $server, $workerId, string $data): void
@@ -105,7 +102,7 @@ class BaseServer
             'workerId' => $workerId,
             'data'     => $data
         ]);
-        echo "$data\n";
+        Log::debug("onPipeMessage#{$workerId}: {$data}");
     }
 
     public static function onClose(SwooleServer $server, int $fd, int $reactorId): void
@@ -116,7 +113,7 @@ class BaseServer
             'reactorId' => $reactorId
         ]);
         if ($server instanceof WebSocketServer) {
-            echo "closed $fd\n";
+            Log::debug("closed fd: {$fd}, reactorId: {$reactorId}");
         }
     }
 
@@ -133,7 +130,7 @@ class BaseServer
             'server'   => $server,
             'workerId' => $workerId
         ]);
-        echo "workerId: $workerId is stop\n";
+        Log::debug("workerId: {$workerId} is stop");
     }
 
     /**
@@ -159,7 +156,7 @@ class BaseServer
             'exitCode'  => $exitCode,
             'signal'    => $signal,
         ]);
-        echo "workerId: $workerId,workerPid:$workerPid is error\n";
+        Log::debug("workerId: {$workerId},workerPid: {$workerPid} is error");
     }
 
     /**
@@ -173,6 +170,7 @@ class BaseServer
         App::getInstance()->event->trigger(TopServerEvent::ON_MANAGER_STOP, [
             'server' => $server
         ]);
+        Log::debug("manager is stopped");
     }
 
     private static function create(int $masterPid, int $managerPid)
@@ -215,5 +213,32 @@ class BaseServer
         $appName    = config('app.name', 'topphp');
         $name       = sprintf('%s: %s for %s', $serverName, $process, $appName);
         swoole_set_process_name($name);
+    }
+
+    /**
+     * 服务启动界面
+     * @param $server
+     * @author sleep
+     */
+    private static function initConsole($server)
+    {
+        Log::debug('worker is started
+************************************************************************
+ ______  _____   ____    ____    __  __  ____        __  __     _
+/\__  _\/\  __`\/\  _`\ /\  _`\ /\ \/\ \/\  _`\     /\ \/\ \  /\' \
+\/_/\ \/\ \ \/\ \ \ \L\ \ \ \L\ \ \ \_\ \ \ \L\ \   \ \ \ \ \/\_, \
+   \ \ \ \ \ \ \ \ \ ,__/\ \ ,__/\ \  _  \ \ ,__/    \ \ \ \ \/_/\ \
+    \ \ \ \ \ \_\ \ \ \/  \ \ \/  \ \ \ \ \ \ \/      \ \ \_/ \ \ \ \
+     \ \_\ \ \_____\ \_\   \ \_\   \ \_\ \_\ \_\       \ `\___/  \ \_\
+      \/_/  \/_____/\/_/    \/_/    \/_/\/_/\/_/        `\/__/    \/_/
+
+    power by KaituoSoft http://www.kaituocn.com
+************************************************************************
+');
+        Log::debug("******** Information Panel *********");
+        foreach ($server->ports as $port) {
+            Log::debug("*  server {$server->host}:{$port->port} is started  *");
+        }
+        Log::debug("************************************");
     }
 }

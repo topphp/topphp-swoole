@@ -14,6 +14,7 @@ use Swoole\Http\Response as SwooleHttpResponse;
 use Swoole\WebSocket\Frame as SwooleFrame;
 use Swoole\WebSocket\Server as SwooleWebSocketServer;
 use think\facade\App;
+use Topphp\TopphpLog\Log;
 use Topphp\TopphpSwoole\contract\SwooleWebSocketServerInterface;
 use Topphp\TopphpSwoole\SwooleEvent;
 
@@ -34,7 +35,7 @@ class WebSocketServer extends SwooleWebSocketServer implements SwooleWebSocketSe
             'server'  => $server,
             'request' => $request,
         ]);
-        echo "$request->fd\n";
+        Log::debug("fd: {$request->fd}");
     }
 
     public static function onMessage(SwooleWebSocketServer $server, SwooleFrame $frame): void
@@ -43,6 +44,7 @@ class WebSocketServer extends SwooleWebSocketServer implements SwooleWebSocketSe
             'server' => $server,
             'frame'  => $frame,
         ]);
+        Log::debug("receive from {$frame->fd}:{$frame->data},opcode:{$frame->opcode},finish:{$frame->finish}");
     }
 
     public static function onHandShake(SwooleHttpRequest $request, SwooleHttpResponse $response): void

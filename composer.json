@@ -22,11 +22,11 @@
         "ext-swoole": ">=4.4.6",
         "doctrine/reflection": "^1.1",
         "symfony/finder": "^5.0",
-        "topphp/topphp-consul": "dev-master",
-        "topphp/topphp-pool": "dev-master",
-        "topphp/topphp-log": "^1.0",
         "topthink/framework": "^6.0.2",
-        "topthink/think-annotation": "*"
+        "topthink/think-annotation": "*",
+        "topphp/topphp-log": "^1.0.0",
+        "topphp/topphp-consul": "^1.0.0",
+        "topphp/topphp-pool": "dev-master"
     },
     "require-dev": {
         "symfony/var-dumper": "^5.0",

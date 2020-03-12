@@ -16,6 +16,7 @@ use ReflectionClass;
 use Swoole\Coroutine;
 use think\facade\App;
 use Topphp\TopphpConsul\consul\Health;
+use Topphp\TopphpLog\Log;
 use Topphp\TopphpPool\rpc\RpcConfig;
 use Topphp\TopphpPool\rpc\RpcPool;
 use Topphp\TopphpSwoole\annotation\Rpc;
@@ -115,9 +116,12 @@ class RpcConsumer
         try {
             $client = $this->getConnection($encode);
             $recv   = $client->recv($this->rpcConfig->getWaitTimeout());
-
-            if (!$recv) {
+            if ($recv === '') {
+                $client->close();
                 throw new ErrorException($client->errMsg);
+            }
+            if ($recv === false) {
+                throw new \RuntimeException($client->errMsg, $client->errCode);
             }
             $responses = $rpcClient->decode($recv);
             $result    = [];
