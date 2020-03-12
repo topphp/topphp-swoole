@@ -15,6 +15,7 @@ use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\AnnotationRegistry;
 use think\facade\App;
 use Topphp\TopphpConsul\consul\Agent;
+use Topphp\TopphpLog\Log;
 use Topphp\TopphpSwoole\annotation\Rpc;
 use Topphp\TopphpSwoole\command\SwooleServer;
 use Topphp\TopphpSwoole\server\TopServerEvent;
@@ -108,7 +109,7 @@ class Service extends \think\Service
     private function publishToConsul($serviceName, $address, $port, $protocol)
     {
         if ($this->serviceIsRegistered($serviceName, $address, $port, $protocol)) {
-            var_dump("{$serviceName} {$address}:{$port} has been already registered to the consul.");
+            Log::debug("{$serviceName} {$address}:{$port} has been already registered to the consul.");
             return;
         }
         $lastId      = $this->getLastServiceId($serviceName);
@@ -140,7 +141,7 @@ class Service extends \think\Service
         $response = $this->agent->registerService($requestBody);
         if ($response->getStatusCode() === 200) {
             $this->registeredService[$serviceName][$protocol][$address][$port] = true;
-            var_dump("{$id} {$address}:{$port} register to the consul successfully.");
+            Log::debug("{$id} {$address}:{$port} register to the consul successfully.");
         } else {
             throw new \RuntimeException($response->getBody());
         }
@@ -202,10 +203,9 @@ class Service extends \think\Service
         if (isset($this->registeredService[$serviceName][$protocol][$address][$port])) {
             return true;
         }
-
         $response = $this->agent->services();
         if ($response->getStatusCode() !== 200) {
-            var_dump("{$serviceName}#{$address}:{$port}register to the consul failed.");
+            Log::debug("{$serviceName}#{$address}:{$port}register to the consul failed.");
             return false;
         }
         $tag      = implode(',', [$serviceName, $address, $port, $protocol]);
