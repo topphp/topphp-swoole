@@ -15,6 +15,7 @@ use Swoole\Server;
 use think\console\Command;
 use think\console\input\Argument;
 use think\helper\Str;
+use Topphp\TopphpPool\rpc\Node;
 use Topphp\TopphpSwoole\FileWatcher;
 use Topphp\TopphpSwoole\server\BaseServer;
 use Topphp\TopphpSwoole\server\HttpServer;
@@ -60,6 +61,8 @@ class SwooleServer extends Command
 
     private function initSwooleServer()
     {
+
+        /** @var Node[] $services */
         $services = [];
         $servers  = $this->app->config->get('topphpServer.servers');
         $servers  = $this->sortServers($servers);
@@ -90,15 +93,11 @@ class SwooleServer extends Command
             // 添加监听事件
             $this->setSwooleServerListeners($slaveServer, $server->getType());
             if ($server->getType() === RpcServer::class) {
-                $services[$server->getName()][] = [
-                    'host' => $server->getHost(),
-                    'port' => $server->getPort()
-                ];
+                $services[$server->getName()][] = new Node($server->getHost(), $server->getPort(), 0);
             }
         }
         // 把启动的服务加入到容器中,注册服务和消费服务时调用
         $this->app->make(ServiceManager::class, [$services]);
-
         // 添加基础监听
         $this->setBaseServerListeners($this->server);
         if (env('APP_DEBUG')) {
