@@ -9,8 +9,13 @@ declare(strict_types=1);
 
 namespace Topphp\TopphpSwoole;
 
+use Topphp\TopphpPool\rpc\Node;
+
 class ServiceManager
 {
+    /**
+     * @var Node[][]
+     */
     private $services;
 
     public function __construct(array $services)
@@ -19,7 +24,7 @@ class ServiceManager
     }
 
     /**
-     * @return array
+     * @return Node[][]
      */
     public function getServices(): array
     {

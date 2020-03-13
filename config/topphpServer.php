@@ -6,6 +6,7 @@
  * Author: sleep <sleep@kaituocn.com>
  */
 
+use Topphp\TopphpSwoole\balancer\RandomBalancer;
 use Topphp\TopphpSwoole\server\HttpServer;
 use Topphp\TopphpSwoole\server\RpcServer;
 use Topphp\TopphpSwoole\server\WebSocketServer;
@@ -71,7 +72,7 @@ return [
     'clients' => [
         [
             'name'     => 'film-server',
-            'balancer' => 'random',
+            'balancer' => RandomBalancer::class,
             'nodes'    => [
                 ['host' => '0.0.0.0', 'port' => 9502, 'weight' => 0],
                 ['host' => '127.0.0.1', 'port' => 9502, 'weight' => 0]

@@ -76,19 +76,19 @@ class Service extends \think\Service
                     continue;
                 }
                 $this->agent = App::make(Agent::class);
-                /** @var ServiceManager $services */
+                /** @var ServiceManager $serviceList */
                 $serviceList = $this->app->get(ServiceManager::class);
                 foreach ($serviceList->getServices() as $name => $services) {
                     foreach ($services as $service) {
                         // 判断当前是否 $rpcAnnotation->name 在配置文件中
                         if ($rpcAnnotation->serverName === $name) {
-                            if (in_array($service['host'], ['0.0.0.0', 'localhost'])) {
-                                $service['host'] = $this->getInternalIp();
+                            if (in_array($service->getHost(), ['0.0.0.0', 'localhost'])) {
+                                $service->setHost($this->getInternalIp());
                             }
                             $this->publishToConsul(
                                 $rpcAnnotation->serviceName,
-                                $service['host'],
-                                $service['port'],
+                                $service->getHost(),
+                                $service->getPort(),
                                 $rpcAnnotation->protocol
                             );
                         }

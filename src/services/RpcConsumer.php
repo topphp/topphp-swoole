@@ -12,14 +12,18 @@ namespace Topphp\TopphpSwoole\services;
 use Exception;
 use ErrorException;
 use Doctrine\Common\Annotations\AnnotationReader;
+use InvalidArgumentException;
 use ReflectionClass;
 use Swoole\Coroutine;
 use think\facade\App;
 use Topphp\TopphpConsul\consul\Health;
-use Topphp\TopphpLog\Log;
+use Topphp\TopphpPool\rpc\Node;
 use Topphp\TopphpPool\rpc\RpcConfig;
 use Topphp\TopphpPool\rpc\RpcPool;
 use Topphp\TopphpSwoole\annotation\Rpc;
+use Topphp\TopphpSwoole\balancer\BalancerAdapter;
+use Topphp\TopphpSwoole\balancer\RandomBalancer;
+use Topphp\TopphpSwoole\contract\BalancerInterface;
 use Topphp\TopphpSwoole\coroutine\Context;
 use Topphp\TopphpSwoole\server\jsonrpc\Client;
 use Topphp\TopphpSwoole\server\jsonrpc\responses\ErrorResponse;
@@ -36,7 +40,7 @@ class RpcConsumer
     private static $instance;
 
     /**
-     * @var array 服务器节点
+     * @var Node 服务器节点
      */
     private $node;
 
@@ -49,6 +53,13 @@ class RpcConsumer
      * @var RpcConfig
      */
     protected $rpcConfig;
+
+    /**
+     * @var BalancerAdapter
+     */
+    protected $balancerAdapter;
+
+    protected $balancerMode = RandomBalancer::class;
 
     /**
      * @param $class
@@ -64,11 +75,15 @@ class RpcConsumer
             if (!self::$instance) {
                 self::$instance = new static;
             }
+            // 获取服务的规则:随机、顺序。。。
+            self::$instance->balancerAdapter = App::make(BalancerAdapter::class);
             // 服务发现 - 随机获取服务连接信息,获取健康节点.
-            self::$instance->node = self::$instance->getCurrentConsumerNode(self::$annotation);
+            $nodeConfig           = self::$instance->getNodeConfig();
+            self::$instance->node = self::$instance->getCurrentConsumerNode(self::$annotation, $nodeConfig);
             if (!self::$instance->node) {
                 throw new ErrorException("is not have this server: " . self::$annotation->serverName);
             }
+            self::$instance->rpcConfig = self::$instance->initRpcConfig($nodeConfig);
             return self::$instance;
         } catch (\Exception $e) {
             return $e->getMessage();
@@ -151,7 +166,7 @@ class RpcConsumer
         }
     }
 
-    private function initConfig($config)
+    private function initRpcConfig($config)
     {
         /** @var RpcConfig $rpcConfig */
         $rpcConfig = App::make(RpcConfig::class, []);
@@ -171,46 +186,49 @@ class RpcConsumer
     /**
      * 获取当前消费节点
      * @param Rpc $service
-     * @return array|bool
-     * @throws Exception
+     * @param array $nodeConfig
+     * @return Node
      * @author sleep
      */
-    private function getCurrentConsumerNode(Rpc $service)
+    private function getCurrentConsumerNode(Rpc $service, array $nodeConfig): Node
     {
-        $clients = App::getInstance()->config->get('topphpServer.clients');
-        foreach ($clients as $client) {
-            if ($client['name'] === $service->serverName) {
-                // 获取consul节点信息.不走本地
-                if ($service->publish && $service->publish === 'consul') {
-                    $nodes = $this->getConsulNodes($service->serviceName);
-                } else {
-                    $nodes = $client['nodes'];
-                }
-                // todo 服务治理
-                switch ($client['balancer']) {
-                    case 'random':
-                        // 随机模式
-                        $currentIndex    = random_int(1, count($nodes));
-                        $this->node      = [
-                            'host' => $nodes[$currentIndex - 1]['host'],
-                            'port' => $nodes[$currentIndex - 1]['port'],
-                        ];
-                        $this->rpcConfig = $this->initConfig($client);
-                        return $this->node;
-                        break;
-                    default:
-                        return [];
-                        break;
+        $nodes           = [];
+        $refreshCallback = null;
+        // 获取consul节点信息.不走本地
+        if ($service->publish && $service->publish === 'consul') {
+            $nodes           = $this->getConsulNodes($service->serviceName);
+            $refreshCallback = function () use ($service) {
+                return $this->getConsulNodes($service->serviceName);
+            };
+        } elseif (isset($nodeConfig['nodes'])) {
+            foreach ($nodeConfig['nodes'] ?? [] as $item) {
+                if (isset($item['host'], $item['port'])) {
+                    if (!is_int($item['port'])) {
+                        throw new InvalidArgumentException('Invalid node config, the port mast be integer.');
+                    }
+                    $nodes[] = new Node($item['host'], $item['port']);
                 }
             }
+        } else {
+            throw new InvalidArgumentException('Config or nodes missing.');
         }
-        return false;
+        // 服务治理
+        if (class_exists($nodeConfig['balancer'])) {
+            $this->balancerMode = $nodeConfig['balancer'];
+        } else {
+            $this->balancerMode = RandomBalancer::class;
+        }
+        $balancer = $this->createBalancer($nodes, $refreshCallback);
+        if (!$balancer->getNodes()) {
+            throw new InvalidArgumentException('nodes missing.');
+        }
+        return $balancer->select();
     }
 
     /**
      * 获取当前服务consul健康节点
      * @param string $serviceName
-     * @return array
+     * @return Node[]
      * @author sleep
      */
     private function getConsulNodes(string $serviceName): array
@@ -233,13 +251,31 @@ class RpcConsumer
                 $port    = (int)$service['Port'] ?? 0;
                 // TODO Get and set the weight property.
                 $weight  = 0;
-                $nodes[] = [
-                    'host'   => $address,
-                    'port'   => $port,
-                    'weight' => $weight
-                ];
+                $nodes[] = new Node($address, $port, $weight);
             }
         }
         return $nodes;
+    }
+
+    protected function createBalancer(array $nodes, callable $refresh = null): BalancerInterface
+    {
+        $loadBalancer = $this->balancerAdapter
+            ->getInstance(self::$annotation->serviceName, $this->balancerMode)
+            ->setNodes($nodes);
+        $refresh && $loadBalancer->refresh($refresh);
+        return $loadBalancer;
+    }
+
+    private function getNodeConfig(): array
+    {
+        $clients = config('topphpServer.clients');
+        $config  = [];
+        foreach ($clients as $client) {
+            if (isset($client['name']) && $client['name'] === self::$annotation->serverName) {
+                $config = $client;
+                break;
+            }
+        }
+        return $config;
     }
 }
