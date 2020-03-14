@@ -201,12 +201,13 @@ class RpcConsumer
                 return $this->getConsulNodes($service->serviceName);
             };
         } elseif (isset($nodeConfig['nodes'])) {
+            // 本地获取nodes参数
             foreach ($nodeConfig['nodes'] ?? [] as $item) {
                 if (isset($item['host'], $item['port'])) {
                     if (!is_int($item['port'])) {
                         throw new InvalidArgumentException('Invalid node config, the port mast be integer.');
                     }
-                    $nodes[] = new Node($item['host'], $item['port']);
+                    $nodes[] = new Node($item['host'], $item['port'], $item['weight']);
                 }
             }
         } else {
@@ -249,8 +250,7 @@ class RpcConsumer
             if ($passing) {
                 $address = $service['Address'] ?? '';
                 $port    = (int)$service['Port'] ?? 0;
-                // TODO Get and set the weight property.
-                $weight  = 0;
+                $weight  = $service['Weights']['Passing'];
                 $nodes[] = new Node($address, $port, $weight);
             }
         }
