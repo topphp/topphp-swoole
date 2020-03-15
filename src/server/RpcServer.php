@@ -42,8 +42,8 @@ class RpcServer extends TcpServer
             $data = Packer::unpack($data);
             [$serverName, $serviceName, $method] = explode('@', $data['method']);
             /** @var Evaluator $rpcService */
-            $rpcService     = App::getInstance()->get($serverName . '::' . $serviceName);
-            $rpcServer      = new Server($rpcService);
+            $rpcService     = App::getInstance()->make($serviceName);
+            $rpcServer      = App::getInstance()->make(Server::class, [$rpcService]);
             $data['method'] = $method;
             $reply          = $rpcServer->reply(Packer::pack($data));
             $server->send($fd, $reply);
