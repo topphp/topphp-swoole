@@ -117,6 +117,8 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
 
     protected static function handleRequest(Http $http, \think\Request $request): \think\Response
     {
+        // todo 这里加缓冲区后对性能不好,但是如果不加的话下载文件会报一个错误 :ob_end_clean(): failed to delete buffer. No buffer to delete
+        // todo 需要改tp的内核文件File.php
         $level = ob_get_level();
         ob_start();
         $response = $http->run($request);
