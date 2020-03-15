@@ -199,13 +199,13 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
         foreach ($response->getHeader() as $key => $val) {
             $res->setHeader($key, (string)$val);
         }
+        $res->setHeader('Server', 'topphp');
         //设置状态码
         $code = $response->getCode();
         if (!isset(self::$statusTexts[$code])) {
             self::$statusTexts[$code] = 'unknown status';
         }
         $res->setStatusCode($code, self::$statusTexts[$code]);
-
         foreach ($cookie->getCookie() as $name => $val) {
             [$value, $expire, $option] = $val;
             $res->setCookie(
