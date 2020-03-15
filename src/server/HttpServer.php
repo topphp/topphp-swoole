@@ -119,20 +119,20 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
     {
         // todo 这里加缓冲区后对性能不好,但是如果不加的话下载文件会报一个错误 :ob_end_clean(): failed to delete buffer. No buffer to delete
         // todo 需要改tp的内核文件File.php
-        $level = ob_get_level();
-        ob_start();
+//        $level = ob_get_level();
+//        ob_start();
         $response = $http->run($request);
-        $content  = $response->getContent();
-        if (ob_get_level() == 0) {
-            ob_start();
-        }
-        $http->end($response);
-        if (ob_get_length() > 0) {
-            $response->content(ob_get_contents() . $content);
-        }
-        while (ob_get_level() > $level) {
-            @ob_end_clean();
-        }
+//        $content  = $response->getContent();
+//        if (ob_get_level() == 0) {
+//            ob_start();
+//        }
+//        $http->end($response);
+//        if (ob_get_length() > 0) {
+//            $response->content(ob_get_contents() . $content);
+//        }
+//        while (ob_get_level() > $level) {
+//            @ob_end_clean();
+//        }
         return $response;
     }
 

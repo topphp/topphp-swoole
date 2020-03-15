@@ -69,9 +69,10 @@ class RpcConsumer
     public static function make($class)
     {
         try {
-            $reader           = App::make(AnnotationReader::class);
-            $reflectionClass  = new ReflectionClass($class);
-            self::$annotation = $reader->getClassAnnotation($reflectionClass, Rpc::class);
+            $reader                        = App::make(AnnotationReader::class);
+            $reflectionClass               = new ReflectionClass($class);
+            self::$annotation              = $reader->getClassAnnotation($reflectionClass, Rpc::class);
+            self::$annotation->serviceName = $class;
             if (!self::$instance) {
                 self::$instance = new static;
             }
