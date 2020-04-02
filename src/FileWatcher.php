@@ -14,7 +14,7 @@ class FileWatcher
 
     public function __construct($directory, $exclude, $name)
     {
-        $this->finder = new Finder();
+        $this->finder = app(Finder::class);
         $this->finder->files()
             ->name($name)
             ->in($directory)
