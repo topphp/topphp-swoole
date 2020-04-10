@@ -232,7 +232,8 @@ class BaseServer
      \ \_\ \ \_____\ \_\   \ \_\   \ \_\ \_\ \_\       \ `\___/  \ \_\
       \/_/  \/_____/\/_/    \/_/    \/_/\/_/\/_/        `\/__/    \/_/
 
-    power by KaituoSoft http://www.kaituocn.com
+    topphp doc: https://topphp.io
+    power by KaituoSoft https://kaituo.io
 ************************************************************************
 ');
         Log::debug("******** Information Panel *********");
