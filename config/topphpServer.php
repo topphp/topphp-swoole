@@ -8,8 +8,6 @@
 
 use Topphp\TopphpSwoole\balancer\RandomBalancer;
 use Topphp\TopphpSwoole\server\HttpServer;
-use Topphp\TopphpSwoole\server\RpcServer;
-use Topphp\TopphpSwoole\server\WebSocketServer;
 
 return [
     'mode'    => SWOOLE_PROCESS,                  // 运行模式为SWOOLE_PROCESS时支持热重启.
@@ -25,30 +23,6 @@ return [
                 'open_websocket_protocol' => false
             ]
         ],
-        [
-            'type'      => RpcServer::class,
-            'name'      => 'film-server',
-            'host'      => '0.0.0.0',                       // 监听地址
-            'port'      => 9502,                            // 监听端口
-            'sock_type' => SWOOLE_SOCK_TCP,
-            'options'   => []
-        ],
-        [
-            'type'      => RpcServer::class,
-            'name'      => 'cinema-server',
-            'host'      => '0.0.0.0',                       // 监听地址
-            'port'      => 9503,                            // 监听端口
-            'sock_type' => SWOOLE_SOCK_TCP,
-            'options'   => []
-        ],
-//        [
-//            'type'      => WebSocketServer::class,
-//            'name'      => 'top-WebSocketServer',
-//            'host'      => '0.0.0.0',                        // 监听地址
-//            'port'      => 9504,                             // 监听端口
-//            'sock_type' => SWOOLE_SOCK_TCP,
-//            'options'   => []
-//        ],
     ],
     'options' => [
         'pid_file'              => runtime_path() . 'topphp_swoole.pid',
@@ -67,40 +41,5 @@ return [
         'max_request'           => 1000000,
         'max_wait_time'         => 60,
         'send_yield'            => true,
-    ],
-
-    'clients' => [
-        [
-            'name'     => 'film-server',
-            'balancer' => RandomBalancer::class,
-            'nodes'    => [
-                ['host' => '0.0.0.0', 'port' => 9502, 'weight' => 0],
-                ['host' => '127.0.0.1', 'port' => 9502, 'weight' => 0]
-            ],
-            'options'  => [],
-            'pool'     => [
-                'min_connections' => 1,
-                'max_connections' => 100,
-                'wait_timeout'    => 10,
-                'connect_timeout' => 10,
-                'max_idle_time'   => 60.0
-            ]
-        ],
-        [
-            'name'     => 'cinema-server',
-            'balancer' => 'random',
-            'nodes'    => [
-                ['host' => '192.168.31.108', 'port' => 9503, 'weight' => 0],
-                ['host' => '127.0.0.1', 'port' => 9503, 'weight' => 0]
-            ],
-            'options'  => [],
-            'pool'     => [
-                'min_connections' => 1,
-                'max_connections' => 100,
-                'wait_timeout'    => 10,
-                'connect_timeout' => 10,
-                'max_idle_time'   => 60.0
-            ]
-        ]
     ],
 ];
