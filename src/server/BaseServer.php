@@ -61,11 +61,6 @@ class BaseServer
                 'server'   => $server,
                 'workerId' => $workerId
             ]);
-            if (!env('APP_DEBUG')) {
-                $date = new \DateTime();
-                echo "[{$date->format('Y-m-d H:i:s.u')}] topphp server is started on
-                {$server->host}:{$server->port}" . PHP_EOL;
-            }
         }
         App::getInstance()->event->trigger(TopServerEvent::ON_WORKER_START, [
             'server'   => $server,

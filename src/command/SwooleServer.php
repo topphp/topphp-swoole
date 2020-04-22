@@ -61,7 +61,6 @@ class SwooleServer extends Command
 
     private function initSwooleServer()
     {
-
         /** @var Node[] $services */
         $services = [];
         $servers  = $this->app->config->get('topphpServer.servers');
@@ -102,6 +101,10 @@ class SwooleServer extends Command
         $this->setBaseServerListeners($this->server);
         if (env('APP_DEBUG')) {
             $this->hotUpdate();
+        } else {
+            $date = new \DateTime();
+            echo "[{$date->format('Y-m-d H:i:s.u')}]
+topphp server is started on {$this->server->host}:{$this->server->port}" . PHP_EOL;
         }
         $this->server->start();
     }
