@@ -6,7 +6,6 @@
  * Author: sleep <sleep@kaituocn.com>
  */
 
-use Topphp\TopphpSwoole\balancer\RandomBalancer;
 use Topphp\TopphpSwoole\server\HttpServer;
 
 return [
