@@ -99,8 +99,9 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
 
     public static function onRequest(SwooleHttpRequest $req, SwooleHttpResponse $res): void
     {
-        $app     = App::getInstance();
-        $request = self::prepareRequest($req);
+        $app                            = App::getInstance();
+        $req->server['SERVER_SOFTWARE'] = 'Swoole/' . SWOOLE_VERSION;
+        $request                        = self::prepareRequest($req);
         try {
             $response = self::handleRequest($app->http, $request);
         } catch (Throwable $e) {
