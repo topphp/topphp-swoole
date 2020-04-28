@@ -118,22 +118,19 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
 
     protected static function handleRequest(Http $http, \think\Request $request): \think\Response
     {
-        // todo 这里加缓冲区后对性能不好,但是如果不加的话下载文件会报一个错误 :ob_end_clean(): failed to delete buffer. No buffer to delete
-        // todo 需要改tp的内核文件File.php
-//        $level = ob_get_level();
-//        ob_start();
         $response = $http->run($request);
-//        $content  = $response->getContent();
-//        if (ob_get_level() == 0) {
-//            ob_start();
+//        if (!headers_sent() && !empty($response->getHeader())) {
+//            // 发送状态码
+//            http_response_code($response->getCode());
+//            // 发送头部信息
+//            foreach ($response->getHeader() as $name => $val) {
+//                header($name . (!is_null($val) ? ':' . $val : ''));
+//            }
 //        }
-//        $http->end($response);
-//        if (ob_get_length() > 0) {
-//            $response->content(ob_get_contents() . $content);
-//        }
-//        while (ob_get_level() > $level) {
-//            @ob_end_clean();
-//        }
+        if (function_exists('fastcgi_finish_request')) {
+            // 提高页面响应
+            fastcgi_finish_request();
+        }
         return $response;
     }
 
@@ -198,6 +195,8 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
      */
     private static function sendResponse(Response $res, \think\Response $response, Cookie $cookie): void
     {
+        // 这一行必须放在开头
+        $content = $response->getContent();
         // 设置header
         foreach ($response->getHeader() as $key => $val) {
             $res->setHeader($key, (string)$val);
@@ -221,7 +220,6 @@ class HttpServer extends SwooleHttpServer implements SwooleHttpServerInterface
                 $option['httponly'] ? true : false
             );
         }
-        $content = $response->getContent();
         self::sendByChunk($res, $content);
     }
 
