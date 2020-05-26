@@ -38,7 +38,7 @@ class Service extends \think\Service
 
     public function register()
     {
-        $this->app->event->listen(TopServerEvent::MAIN_WORKER_START, function ($event) {
+        $this->app->event->listen(TopServerEvent::ON_WORKER_START, function ($event) {
             //  pool\Db::class 更换为连接池数据库类
             $this->app->bind('db', Db::class);
             AnnotationReader::addGlobalIgnoredName('mixin');
