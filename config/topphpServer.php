@@ -15,7 +15,7 @@ return [
             'type'      => HttpServer::class,
             'name'      => 'gateway',
             'host'      => '0.0.0.0',                       // 监听地址
-            'port'      => 9501,                            // 监听端口
+            'port'      => 9876,                            // 监听端口
             'sock_type' => SWOOLE_SOCK_TCP,
             'options'   => [
                 // 开启websocket服务时设为true
