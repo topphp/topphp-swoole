@@ -41,6 +41,8 @@ class Service extends \think\Service
         $this->app->event->listen(TopServerEvent::ON_WORKER_START, function ($event) {
             //  pool\Db::class 更换为连接池数据库类
             $this->app->bind('db', Db::class);
+            $this->app->initialize();
+            $this->prepareConcretes();
             AnnotationReader::addGlobalIgnoredName('mixin');
             AnnotationRegistry::registerLoader('class_exists');
             // 遍历 app 目录,扫描注解
@@ -95,7 +97,15 @@ class Service extends \think\Service
             }
         });
     }
-
+    private function prepareConcretes()
+    {
+        $concretes = ['db'];
+        foreach ($concretes as $concrete) {
+            if ($this->app->has($concrete)) {
+                $this->app->make($concrete);
+            }
+        }
+    }
     /**
      * 服务注册
      * @param $serviceName
