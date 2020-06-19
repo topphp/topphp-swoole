@@ -37,4 +37,10 @@ class TopServerEvent
     const ON_OPEN      = 'topphp.WebSocketServer.onOpen';
     const ON_HANDSHAKE = 'topphp.WebSocketServer.onHandShake';
     const ON_MESSAGE   = 'topphp.WebSocketServer.onMessage';
+    // MQTT
+    const ON_MQTT_PINGREQ = 'topphp.MQTTServer.onMqPingreq';
+    const ON_MQTT_RECEIVE = 'topphp.MQTTServer.onReceive';
+    const ON_MQTT_CONNECT = 'topphp.MQTTServer.onMqConnect';
+    const ON_MQTT_DISCONNECT = 'topphp.MQTTServer.onMqDisconnect';
+    const ON_MQTT_UNSUBSCRIBE = 'topphp.MQTTServer.onMqUnsubscribe';
 }
