@@ -15,11 +15,9 @@ use Topphp\TopphpSwoole\server\mqtt\MQTT;
 
 class MQTTServer extends TcpServer
 {
-    private static $config;
-
     public static function onReceive(SwooleServer $server, int $fd, int $reactorId, string $data): void
     {
-        App::getInstance()->event->trigger(TopServerEvent::ON_TCP_RECEIVE, [
+        app('event')->trigger(TopServerEvent::ON_TCP_RECEIVE, [
             'server'    => $server,
             'fd'        => $fd,
             'reactorId' => $reactorId,
@@ -30,7 +28,7 @@ class MQTTServer extends TcpServer
             if (is_array($data) && isset($data['cmd'])) {
                 switch ($data['cmd']) {
                     case MQTT::PINGREQ: // 心跳请求
-                        App::getInstance()->event->trigger(TopServerEvent::ON_MQTT_PINGREQ, [
+                        app('event')->trigger(TopServerEvent::ON_MQTT_PINGREQ, [
                             'server'    => $server,
                             'fd'        => $fd,
                             'reactorId' => $reactorId,
@@ -44,7 +42,7 @@ class MQTTServer extends TcpServer
                             // 如果协议名不正确服务端可以断开客户端的连接，也可以按照某些其它规范继续处理CONNECT报文
                             $server->close($fd);
                         }
-                        App::getInstance()->event->trigger(TopServerEvent::ON_MQTT_CONNECT, [
+                        app('event')->trigger(TopServerEvent::ON_MQTT_CONNECT, [
                             'server'    => $server,
                             'fd'        => $fd,
                             'reactorId' => $reactorId,
@@ -52,7 +50,7 @@ class MQTTServer extends TcpServer
                         ]);
                         break;
                     case MQTT::DISCONNECT: // 客户端断开连接
-                        App::getInstance()->event->trigger(TopServerEvent::ON_MQTT_DISCONNECT, [
+                        app('event')->trigger(TopServerEvent::ON_MQTT_DISCONNECT, [
                             'server'    => $server,
                             'fd'        => $fd,
                             'reactorId' => $reactorId,
@@ -63,7 +61,7 @@ class MQTTServer extends TcpServer
                         }
                         break;
                     case MQTT::PUBLISH: // 发布消息
-                        App::getInstance()->event->trigger(TopServerEvent::ON_MQTT_PUBLISH, [
+                        app('event')->trigger(TopServerEvent::ON_MQTT_PUBLISH, [
                             'server'    => $server,
                             'fd'        => $fd,
                             'reactorId' => $reactorId,
@@ -71,7 +69,7 @@ class MQTTServer extends TcpServer
                         ]);
                         break;
                     case MQTT::SUBSCRIBE: // 订阅
-                        App::getInstance()->event->trigger(TopServerEvent::ON_MQTT_SUBSCRIBE, [
+                        app('event')->trigger(TopServerEvent::ON_MQTT_SUBSCRIBE, [
                             'server'    => $server,
                             'fd'        => $fd,
                             'reactorId' => $reactorId,
@@ -79,7 +77,7 @@ class MQTTServer extends TcpServer
                         ]);
                         break;
                     case MQTT::UNSUBSCRIBE: // 取消订阅
-                        App::getInstance()->event->trigger(TopServerEvent::ON_MQTT_UNSUBSCRIBE, [
+                        app('event')->trigger(TopServerEvent::ON_MQTT_UNSUBSCRIBE, [
                             'server'    => $server,
                             'fd'        => $fd,
                             'reactorId' => $reactorId,
