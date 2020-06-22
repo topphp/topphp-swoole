@@ -39,8 +39,9 @@ class TopServerEvent
     const ON_MESSAGE   = 'topphp.WebSocketServer.onMessage';
     // MQTT
     const ON_MQTT_PINGREQ = 'topphp.MQTTServer.onMqPingreq';
-    const ON_MQTT_RECEIVE = 'topphp.MQTTServer.onReceive';
     const ON_MQTT_CONNECT = 'topphp.MQTTServer.onMqConnect';
     const ON_MQTT_DISCONNECT = 'topphp.MQTTServer.onMqDisconnect';
     const ON_MQTT_UNSUBSCRIBE = 'topphp.MQTTServer.onMqUnsubscribe';
+    const ON_MQTT_PUBLISH = 'topphp.MQTTServer.onMqPublish';
+    const ON_MQTT_SUBSCRIBE = 'topphp.MQTTServer.onMqSubscribe';
 }

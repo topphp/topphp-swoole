@@ -7,6 +7,7 @@
  */
 
 use Topphp\TopphpSwoole\server\HttpServer;
+use Topphp\TopphpSwoole\server\MQTTServer;
 
 return [
     'mode'    => SWOOLE_PROCESS,                  // 运行模式为SWOOLE_PROCESS时支持热重启.
@@ -22,6 +23,17 @@ return [
                 'open_websocket_protocol' => false
             ]
         ],
+//        [
+//            'type'      => MQTTServer::class,
+//            'name'      => 'mqtt',
+//            'host'      => '0.0.0.0',                       // 监听地址
+//            'port'      => 9877,                            // 监听端口
+//            'sock_type' => SWOOLE_SOCK_TCP,
+//            'options'   => [
+//                // 开启mqtt服务时设为true
+//                'open_mqtt_protocol' => true
+//            ]
+//        ],
     ],
     'options' => [
         'pid_file'              => runtime_path() . 'topphp_swoole.pid',
