@@ -12,20 +12,20 @@ namespace Topphp\TopphpSwoole\server\mqtt;
 interface MQTTInterface
 {
     // 1
-    public static function onMqConnect($server, int $fd, $fromId, $data);
+    public function onMqConnect($server, int $fd, $fromId, $data);
 
     // 12
-    public static function onMqPingreq($server, int $fd, $fromId, $data): bool;
+    public function onMqPingreq($server, int $fd, $fromId, $data): bool;
 
     // 14
-    public static function onMqDisconnect($server, int $fd, $fromId, $data): bool;
+    public function onMqDisconnect($server, int $fd, $fromId, $data): bool;
 
     // 3
-    public static function onMqPublish($server, int $fd, $fromId, $data);
+    public function onMqPublish($server, int $fd, $fromId, $data);
 
     // 8
-    public static function onMqSubscribe($server, int $fd, $fromId, $data);
+    public function onMqSubscribe($server, int $fd, $fromId, $data);
 
     // 10
-    public static function onMqUnsubscribe($server, int $fd, $fromId, $data);
+    public function onMqUnsubscribe($server, int $fd, $fromId, $data);
 }
