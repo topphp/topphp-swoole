@@ -35,7 +35,7 @@ class MQTTServer extends TcpServer
                             'data'      => $data
                         ]);
                         // 返回心跳响应
-                        $server->send($fd, MQTT::getAck(['cmd' => 13]));
+                        $server->send($fd, MQTT::getAck(['cmd' => MQTT::PINGRESP]));
                         break;
                     case MQTT::CONNECT: // 连接
                         if ($data['protocol_name'] != "MQTT") {
