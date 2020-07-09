@@ -26,7 +26,7 @@
         "topthink/think-annotation": "*",
         "topphp/topphp-log": "^1.0.0",
         "topphp/topphp-consul": "^1.0.0",
-        "topphp/topphp-pool": "^1.0.0"
+        "topphp/topphp-pool": "^1.1.0"
     },
     "require-dev": {
         "symfony/var-dumper": "^5.0",
