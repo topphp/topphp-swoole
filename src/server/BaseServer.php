@@ -74,15 +74,12 @@ class BaseServer
         self::create($server->master_pid, $server->manager_pid ?? 0);
     }
 
-    public static function onTask(SwooleServer $server, $taskId, $fromId, string $data): void
+    public static function onTask(SwooleServer $server, SwooleServer\Task $task): void
     {
         App::getInstance()->event->trigger(TopServerEvent::ON_TASK, [
             'server' => $server,
-            'taskId' => $taskId,
-            'fromId' => $fromId,
-            'data'   => $data
+            'task'   => $task,
         ]);
-        Log::debug("New AsyncTask[id=$taskId,fromId={$fromId}], data: {$data}");
     }
 
     public static function onFinish(SwooleServer $server, int $taskId, string $data)
