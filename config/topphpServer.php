@@ -42,6 +42,7 @@ return [
         // Normally this value should be 1~4 times larger according to your cpu cores.
         'worker_num'            => swoole_cpu_num(),
         'task_worker_num'       => swoole_cpu_num(),    // 配置 Task 进程的数量。【默认值：未配置则不启动 task】
+        'task_use_object'       => true,                //使用面向对象风格的 Task 回调格式。【默认值：false】
         'task_enable_coroutine' => true,
         'task_max_request'      => 1000000,
         'enable_static_handler' => true,

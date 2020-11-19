@@ -74,15 +74,12 @@ class BaseServer
         self::create($server->master_pid, $server->manager_pid ?? 0);
     }
 
-    public static function onTask(SwooleServer $server, $taskId, $fromId, string $data): void
+    public static function onTask(SwooleServer $server, SwooleServer\Task $task): void
     {
         App::getInstance()->event->trigger(TopServerEvent::ON_TASK, [
             'server' => $server,
-            'taskId' => $taskId,
-            'fromId' => $fromId,
-            'data'   => $data
+            'task'   => $task,
         ]);
-        Log::debug("New AsyncTask[id=$taskId,fromId={$fromId}], data: {$data}");
     }
 
     public static function onFinish(SwooleServer $server, int $taskId, string $data)
@@ -205,14 +202,17 @@ class BaseServer
      */
     private static function setProcessName($process)
     {
-        // Mac OSX不支持进程重命名
-        if (stristr(PHP_OS, 'DAR')) {
+        // Mac OSX WIN不支持进程重命名
+        if (stristr(PHP_OS, 'DAR') || stristr(PHP_OS, 'CYGWIN')) {
             return;
         }
-        $serverName = 'swoole_http_server';
-        $appName    = config('app.name', 'topphp');
-        $name       = sprintf('%s: %s for %s', $serverName, $process, $appName);
-        swoole_set_process_name($name);
+        try {
+            $serverName = 'swoole_http_server';
+            $appName    = config('app.name', 'topphp');
+            $name       = sprintf('%s: %s for %s', $serverName, $process, $appName);
+            @swoole_set_process_name($name);
+        } catch (Throwable $e) {
+        }
     }
 
     /**

@@ -47,7 +47,7 @@ class SwooleServer extends Command
         switch ($action) {
             case 'start':
                 Coroutine::set(['hook_flags' => SWOOLE_HOOK_ALL]);//v4.4+版本使用此方法。
-                $this->app->bind(SwooleApp::class, $this->initSwooleServer());
+                $this->initSwooleServer();
                 break;
             default:
                 if (in_array($action, [])) {
@@ -106,6 +106,7 @@ class SwooleServer extends Command
             echo "[{$date->format('Y-m-d H:i:s.u')}]
 topphp server is started on {$this->server->host}:{$this->server->port}" . PHP_EOL;
         }
+        $this->app->bind(SwooleApp::class, $this->server);
         $this->server->start();
     }
 
