@@ -26,12 +26,12 @@
         "topthink/think-annotation": "*",
         "topphp/topphp-log": "^1.0.0",
         "topphp/topphp-consul": "^1.0.0",
-        "topphp/topphp-pool": "^1.1.0"
+        "topphp/topphp-pool": "^1.1.0",
+        "swoole/ide-helper": ">=4.4"
     },
     "require-dev": {
         "symfony/var-dumper": "^5.0",
         "squizlabs/php_codesniffer": "^3.5",
-        "swoole/ide-helper": ">=4.4",
         "topphp/topphp-testing": "^1.0.0"
     },
     "autoload": {
